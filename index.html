@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V6.0</title>
+    <title>StackNet | Pro V6.0 + Áudio</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ff88">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -54,6 +54,12 @@
         .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         
+        /* Botão Mic */
+        .btn-mic { background: #ff4444; color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .btn-mic.recording { transform: scale(1.2); box-shadow: 0 0 15px #ff4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+        audio { max-width: 200px; height: 35px; margin-top: 5px; }
+
         /* Sistema de Reply (Citação) */
         .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
         .preview-reply { background: var(--card); padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 12px; display: flex; justify-content: space-between; border: 1px solid var(--border); border-bottom: none; align-items: center; }
@@ -143,9 +149,10 @@
                     <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
                 </div>
                 
-                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border);">
-                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0">
-                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:50px; cursor:pointer; font-weight:bold;">➤</button>
+                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center;">
+                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex: 1;">
+                    <button id="btn-audio" class="btn-mic" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()" ontouchstart="iniciarGravacao()" ontouchend="pararGravacao()">🎤</button>
+                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height: 45px; cursor:pointer; font-weight:bold;">➤</button>
                 </div>
             </div>
         </div>
@@ -172,15 +179,52 @@
         let meusSeguindo = []; 
         let replyingToGeral = null;
         let replyingToPrivado = null;
+        let mediaRecorder, audioChunks = [];
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+        // --- SISTEMA DE ÁUDIO ---
+        window.iniciarGravacao = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result;
+                        if(base64Audio.length > 900000) return alert("Áudio muito longo!");
+                        enviarMensagemAudio(base64Audio);
+                    };
+                };
+                mediaRecorder.start();
+                document.getElementById('btn-audio').classList.add('recording');
+            } catch (err) { alert("Permita o microfone para gravar áudio."); }
+        };
+
+        window.pararGravacao = () => {
+            if(mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                document.getElementById('btn-audio').classList.remove('recording');
+            }
+        };
+
+        async function enviarMensagemAudio(base64) {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
+                de: meuNome, audio: base64, data: Date.now(), dataStr: formataData(), lida: false, editado: false 
+            });
+        }
 
         // --- SISTEMA PWA (INSTALAÇÃO) ---
         let instalador;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             instalador = e;
-            document.getElementById('btn-instalar').classList.remove('hidden'); // Mostra botão
+            document.getElementById('btn-instalar').classList.remove('hidden'); 
         });
 
         window.instalarApp = async () => {
@@ -192,7 +236,6 @@
             }
         };
 
-        // Registra o Service Worker (necessário para instalar)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
         }
@@ -220,9 +263,8 @@
 
         window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
 
-        // --- SISTEMA DE RESPOSTAS (REPLY) ---
         window.prepararResposta = (id, nome, texto, tipo) => {
-            const txtLindo = texto.replace(/\\'/g, "'"); // Arruma aspas se tiver
+            const txtLindo = texto.replace(/\\'/g, "'"); 
             if (tipo === 'geral') {
                 replyingToGeral = { nome, texto: txtLindo };
                 document.getElementById('preview-reply-geral').classList.remove('hidden');
@@ -246,8 +288,6 @@
             }
         };
 
-        // Restante das funções de Perfil, Edição, Seguir, Feed, Chat Geral e Chat Privado (igual à v5.1, com suporte ao reply)...
-        
         window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
         window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor }); alert("Perfil Salvo!"); };
         async function carregarPerfil() {
@@ -268,13 +308,23 @@
 
         window.postar = async () => {
             const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
-            if(txt.trim()) { await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); document.getElementById('postInput').value = ""; }
+            if(txt.trim()) { await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); document.getElementById('postInput').value = ""; 
+            }
         };
-        window.toggleLike = async (postId) => { let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]"); const index = curtidos.indexOf(postId); if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); } localStorage.setItem('curtidos', JSON.stringify(curtidos)); };
-        window.comentar = async (postId) => { const msg = prompt("Deixe seu comentário:"); if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); } };
-        window.editarItem = async (caminho, id, campo, textoAntigo) => { const novo = prompt("Editar:", textoAntigo); if(novo && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(doc(db, caminho, id), { [campo]: novo, editado: true }); } };
-        window.toggleSeguir = async (idOutro, event) => { event.stopPropagation(); const ref = doc(db, "usuarios", meuNome); if(meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); } };
-        
+
+        window.toggleLike = async (postId) => {
+            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+            const index = curtidos.indexOf(postId);
+            if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } 
+            else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); }
+            localStorage.setItem('curtidos', JSON.stringify(curtidos));
+        };
+
+        window.comentar = async (postId) => {
+            const msg = prompt("Deixe seu comentário:");
+            if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); }
+        };
+
         function ouvirFeed() {
             onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
                 const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
@@ -340,12 +390,13 @@
                     if(souEu && d.lida && minhaCor === '#000000') iconLida = `<span style="color:var(--main); font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>`;
                     
                     let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
+                    let conteudo = d.audio ? `<audio controls src="${d.audio}"></audio>` : d.texto;
                     
-                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.texto.replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
-                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : d.texto.replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto ? d.texto.replace(/'/g, "\\'") : ""}')" ${d.audio ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
                     botoesMsg += `</div>`;
                     
-                    box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
+                    box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${conteudo}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
