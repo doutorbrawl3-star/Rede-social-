@@ -263,6 +263,38 @@
 
         window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
 
+        // CORRIGIDO: Editar agora puxa direto do banco (sem bugar aspas no HTML)
+        window.editarItem = async (caminho, id, campo) => {
+            try {
+                const docRef = doc(db, caminho, id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const textoAntigo = docSnap.data()[campo] || "";
+                    const novo = prompt("Editar:", textoAntigo);
+                    if (novo !== null && novo.trim() !== "" && novo !== textoAntigo) {
+                        await updateDoc(docRef, { [campo]: novo, editado: true });
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao editar:", e);
+            }
+        };
+
+        // CORRIGIDO: Seguir agora é seguro
+        window.toggleSeguir = async (idOutro, event) => {
+            if (event) event.stopPropagation();
+            try {
+                const ref = doc(db, "usuarios", meuNome);
+                if (meusSeguindo.includes(idOutro)) {
+                    await updateDoc(ref, { seguindo: arrayRemove(idOutro) });
+                } else {
+                    await updateDoc(ref, { seguindo: arrayUnion(idOutro) });
+                }
+            } catch (e) {
+                console.error("Erro ao seguir:", e);
+            }
+        };
+
         window.prepararResposta = (id, nome, texto, tipo) => {
             const txtLindo = texto.replace(/\\'/g, "'"); 
             if (tipo === 'geral') {
@@ -292,7 +324,7 @@
         window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor }); alert("Perfil Salvo!"); };
         async function carregarPerfil() {
             onSnapshot(doc(db, "usuarios", meuNome), (d) => {
-                if(d.exists()) {
+                   if(d.exists()) {
                     const dados = d.data();
                     minhaCor = dados.cor || "#00ff88"; meusSeguindo = dados.seguindo || [];
                     document.documentElement.style.setProperty('--main', minhaCor);
@@ -331,7 +363,7 @@
                 const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
                 snap.forEach(p => {
                     const d = p.data(); const ehCurtido = curtidos.includes(p.id);
-                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content', '${d.content.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
+                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
                     let comentariosHTML = ""; if(d.comentarios) { d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; }); }
                     feed.innerHTML += `<div class="post-card">${acoesTopo}<div class="card-header"><div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div><div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div></div><div style="font-size:15px; margin-bottom:10px;">${d.content}</div>${d.img ? `<img src="${d.img}" class="post-img">` : ""}<div style="display:flex; gap:10px; margin-top:15px;"><div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div><div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div></div><div style="margin-top:10px;">${comentariosHTML}</div></div>`;
                 });
@@ -353,8 +385,9 @@
                 snap.forEach(m => {
                     const d = m.data(); const souEu = d.nome === meuNome;
                     let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
-                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${d.texto.replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
-                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
+                    
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${(d.texto||"").replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
                     botoesMsg += `</div>`;
                     lista.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : '#30363d'}; color:${souEu ? 'black' : 'white'};">${replyHtml}<b style="font-size:10px; opacity:0.6;">${d.nome}</b><br>${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Editado)</i>' : ''}</div></div>${botoesMsg}</div>`;
                 });
@@ -392,8 +425,8 @@
                     let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
                     let conteudo = d.audio ? `<audio controls src="${d.audio}"></audio>` : d.texto;
                     
-                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : d.texto.replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
-                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto ? d.texto.replace(/'/g, "\\'") : ""}')" ${d.audio ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : (d.texto||"").replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto')" ${d.audio ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
                     botoesMsg += `</div>`;
                     
                     box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${conteudo}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
