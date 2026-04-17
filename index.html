@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V6.0 + Áudio</title>
+    <title>StackNet | Pro V7.0 + Stories</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ff88">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,8 +22,17 @@
         .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
         .contadores { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         
-        /* Feed */
+        /* Feed & Stories */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
+        
+        /* Novo: CSS dos Stories */
+        .stories-wrapper { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .story-circle { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--main); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: black; flex-shrink: 0; cursor: pointer; background: #333; }
+        .story-add { border: 2px dashed var(--text-gray); background: transparent; color: var(--text-gray); }
+        
+        /* Novo: Modal de Visualizar Story */
+        #story-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
@@ -111,6 +120,11 @@
         </div>
 
         <div id="aba-feed" class="aba">
+            <div id="stories-wrapper" class="stories-wrapper">
+                <div class="story-circle story-add" onclick="postarStory()">+</div>
+                <div id="stories-list" style="display:contents;"></div>
+            </div>
+
             <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
                 <textarea id="postInput" placeholder="O que há de novo? (Cole um link de imagem!)" style="margin-bottom:10px;"></textarea>
                 <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Publicar</button>
@@ -156,6 +170,16 @@
                 </div>
             </div>
         </div>
+
+        <div id="story-viewer" class="hidden">
+            <div style="width: 100%; display: flex; justify-content: flex-end; padding: 20px; position: absolute; top: 0;">
+                <button onclick="fecharStory()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer; font-weight:bold;">✖</button>
+            </div>
+            <div class="avatar" id="sv-avatar" style="width:80px; height:80px; font-size:35px; margin-bottom:20px;"></div>
+            <h2 id="sv-nome" style="color:var(--main); margin-bottom:15px;"></h2>
+            <p id="sv-texto" style="font-size:24px; line-height:1.4; color:white; word-wrap: break-word; max-width: 90%;"></p>
+            <span id="sv-data" style="color:var(--text-gray); font-size:14px; margin-top:20px;"></span>
+        </div>
     </div>
 
     <script type="module">
@@ -182,6 +206,42 @@
         let mediaRecorder, audioChunks = [];
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+        // --- SISTEMA DE STORIES ---
+        window.postarStory = async () => {
+            const texto = prompt("Qual é o seu status de hoje?");
+            if (texto && texto.trim() !== "") {
+                await addDoc(collection(db, "stories"), {
+                    nome: meuNome, texto: texto, data: Date.now(), dataStr: formataData(), cor: minhaCor
+                });
+            }
+        };
+
+        function ouvirStories() {
+            const umDiaAtras = Date.now() - (24 * 60 * 60 * 1000); // Filtra últimas 24h
+            onSnapshot(query(collection(db, "stories"), where("data", ">", umDiaAtras), orderBy("data", "desc")), (snap) => {
+                const lista = document.getElementById('stories-list');
+                lista.innerHTML = "";
+                snap.forEach(s => {
+                    const d = s.data();
+                    const safeText = (d.texto || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    lista.innerHTML += `<div class="story-circle" style="background:${d.cor || '#333'}" onclick="verStory('${d.nome}', '${d.cor}', '${safeText}', '${d.dataStr}')">${d.nome[0]}</div>`;
+                });
+            });
+        }
+
+        window.verStory = (nome, cor, texto, dataStr) => {
+            document.getElementById('sv-avatar').innerText = nome[0];
+            document.getElementById('sv-avatar').style.background = cor;
+            document.getElementById('sv-nome').innerText = nome;
+            document.getElementById('sv-texto').innerText = texto;
+            document.getElementById('sv-data').innerText = dataStr;
+            document.getElementById('story-viewer').classList.remove('hidden');
+        };
+
+        window.fecharStory = () => {
+            document.getElementById('story-viewer').classList.add('hidden');
+        };
 
         // --- SISTEMA DE ÁUDIO ---
         window.iniciarGravacao = async () => {
@@ -248,7 +308,7 @@
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
-                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes();
+                          carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories();
             }
         };
 
