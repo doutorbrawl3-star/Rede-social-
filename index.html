@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro</title>
+    <title>StackNet | Pro V2</title>
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
@@ -30,23 +30,20 @@
         .info b { display: block; font-size: 14px; color: var(--main); }
         .info span { font-size: 11px; color: var(--text-gray); }
 
-        /* Like Button */
-        .like-area { margin-top: 10px; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .like-area:hover { color: #ff4444; }
+        /* Imagens nos Posts */
+        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); }
 
-        /* Chat */
-        #chat-geral-lista, #mensagens-privadas { height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding: 10px; }
-        .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-        #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
-        .chat-top { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
-        
+        /* Perfil */
+        .perfil-card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
+        .bio-text { color: var(--text-gray); font-size: 14px; margin: 10px 0; font-style: italic; }
+
+        /* Botões e Msg */
+        .like-area { margin-top: 10px; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+        #chat-geral-lista, #mensagens-privadas { height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .msg-container { display: flex; flex-direction: column; position: relative; max-width: 80%; }
-        .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; word-wrap: break-word; }
+        .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; }
         .me { align-self: flex-end; background: var(--main); color: black; }
-        
-        .btn-del { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; text-align: right; margin-top: 2px; }
         .del-post { position: absolute; top: 15px; right: 15px; color: #ff4444; font-size: 11px; cursor: pointer; }
-
     </style>
 </head>
 <body>
@@ -63,18 +60,29 @@
         <nav>
             <button onclick="mudarAba('feed')">🔥 Feed</button>
             <button onclick="mudarAba('chat-geral')">💬 Geral</button>
-            <button onclick="mudarAba('users')">👥 Privado</button>
-            <button onclick="sair()" style="color: #f44; border-color: #f44;">Sair</button>
+            <button onclick="mudarAba('users')">👥 Chat</button>
+            <button onclick="mudarAba('perfil')">👤 Perfil</button>
+            <button onclick="sair()" style="color: #f44;">Sair</button>
         </nav>
 
         <div id="aba-feed" class="aba">
-            <textarea id="postInput" placeholder="O que está acontecendo?"></textarea>
-            <button onclick="postar()">Publicar Post</button>
+            <div class="post-box">
+                <textarea id="postInput" placeholder="O que está acontecendo? (Cole links de imagens aqui!)"></textarea>
+                <button onclick="postar()">Publicar Post</button>
+            </div>
             <div id="feed-lista" style="margin-top: 20px;"></div>
         </div>
 
+        <div id="aba-perfil" class="aba hidden">
+            <div class="perfil-card">
+                <div class="avatar" id="perf-avatar" style="width: 80px; height: 80px; margin: 0 auto; font-size: 32px;">S</div>
+                <h2 id="perf-nome" style="color: var(--main); margin: 10px 0;">Nome</h2>
+                <textarea id="bioInput" placeholder="Escreva sua biografia..."></textarea>
+                <button onclick="salvarBio()">Salvar Bio</button>
+            </div>
+        </div>
+
         <div id="aba-chat-geral" class="aba hidden">
-            <h3>Chat Geral</h3>
             <div id="chat-geral-lista"></div>
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="chatGeralInput" placeholder="Mensagem..." style="margin:0">
@@ -83,18 +91,16 @@
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <h3>Pessoas</h3>
             <div id="lista-usuarios"></div>
-            
             <div id="janela-chat" class="hidden">
-                <div class="chat-top">
-                    <button onclick="fecharChat()" style="width: auto; padding: 5px 12px; background:#333; color:white; border:none; border-radius:5px;">⬅ Voltar</button>
+                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center;">
+                    <button onclick="fecharChat()" style="width:auto; padding: 5px 12px;">⬅ Voltar</button>
                     <b id="chat-com-nome"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
-                <div style="padding: 15px; display: flex; gap: 8px; background: var(--card); border-top: 1px solid var(--border);">
+                <div style="padding:15px; display:flex; gap:8px; background:var(--card);">
                     <input type="text" id="msgPrivadaInput" placeholder="Mensagem..." style="margin:0">
-                    <button onclick="enviarPrivado()" style="width: 60px;">➤</button>
+                    <button onclick="enviarPrivado()" style="width:60px;">➤</button>
                 </div>
             </div>
         </div>
@@ -102,7 +108,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -121,11 +127,6 @@
         let chatAtivoId = "";
         let unsubChat = null;
 
-        const formataData = () => {
-            const d = new Date();
-            return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        };
-
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
@@ -133,8 +134,8 @@
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 
-                // Salva como online
-                await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true });
+                await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
+                carregarPerfil();
                 ouvirUsuarios();
                 ouvirFeed();
                 ouvirChatGeral();
@@ -146,25 +147,55 @@
             location.reload();
         };
 
+        // --- BIO E PERFIL ---
+        async function carregarPerfil() {
+            const userDoc = await getDoc(doc(db, "usuarios", meuNome));
+            if(userDoc.exists()) {
+                document.getElementById('perf-nome').innerText = meuNome;
+                document.getElementById('perf-avatar').innerText = meuNome[0];
+                document.getElementById('bioInput').value = userDoc.data().bio || "";
+            }
+        }
+
+        window.salvarBio = async () => {
+            const novaBio = document.getElementById('bioInput').value;
+            await updateDoc(doc(db, "usuarios", meuNome), { bio: novaBio });
+            alert("Bio salva!");
+        };
+
         window.mudarAba = (aba) => {
             document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        window.excluirMsg = async (caminho, id) => {
-            if(confirm("Deseja excluir?")) await deleteDoc(doc(db, caminho, id));
-        };
-
-        // --- LIKES ---
+        // --- LOGICA DE LIKE (BLOQUEIA INFINITO) ---
         window.darLike = async (postId) => {
+            const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+            if(curtidos.includes(postId)) {
+                alert("Você já curtiu este post!");
+                return;
+            }
             await updateDoc(doc(db, "posts", postId), { likes: increment(1) });
+            curtidos.push(postId);
+            localStorage.setItem('curtidos', JSON.stringify(curtidos));
         };
 
-        // --- FEED ---
+        // --- POSTAR (COM DETECTOR DE IMAGEM) ---
         window.postar = () => {
             const txt = document.getElementById('postInput').value;
+            // Busca links de imagem no texto
+            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+            const match = txt.match(imgRegex);
+            const imgUrl = match ? match[0] : null;
+
             if(txt.trim()) {
-                addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData(), likes: 0 });
+                addDoc(collection(db, "posts"), { 
+                    nome: meuNome, 
+                    content: txt.replace(imgUrl, ""), // Remove o link do texto se houver imagem
+                    img: imgUrl,
+                    data: Date.now(), 
+                    likes: 0 
+                });
                 document.getElementById('postInput').value = "";
             }
         };
@@ -175,53 +206,42 @@
                 feed.innerHTML = "";
                 snap.forEach(p => {
                     const d = p.data();
-                    const id = p.id;
-                    const btnDel = d.nome === meuNome ? `<span class="del-post" onclick="excluirMsg('posts', '${id}')">Excluir</span>` : "";
+                    const imgTag = d.img ? `<img src="${d.img}" class="post-img">` : "";
                     feed.innerHTML += `
                         <div class="post-card">
-                            ${btnDel}
                             <div class="card-header">
                                 <div class="avatar">${d.nome[0]}</div>
-                                <div class="info"><b>${d.nome}</b><span>${d.dataStr || ""}</span></div>
+                                <div class="info"><b>${d.nome}</b></div>
                             </div>
-                            <div style="line-height:1.4">${d.content}</div>
-                            <div class="like-area" onclick="darLike('${id}')">❤️ ${d.likes || 0} Curtidas</div>
+                            <div>${d.content}</div>
+                            ${imgTag}
+                            <div class="like-area" onclick="darLike('${p.id}')">❤️ ${d.likes || 0}</div>
                         </div>`;
                 });
             });
         }
 
-        // --- CHAT GERAL ---
-        window.enviarGeral = () => {
-            const txt = document.getElementById('chatGeralInput').value;
-            if(txt.trim()) {
-                addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData() });
-                document.getElementById('chatGeralInput').value = "";
-            }
-        };
-
+        // --- CHAT GERAL E PRIVADO (Resumo) ---
         function ouvirChatGeral() {
             onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
                 const lista = document.getElementById('chat-geral-lista');
                 lista.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data();
-                    const id = m.id;
-                    const btnDel = d.nome === meuNome ? `<button class="btn-del" onclick="excluirMsg('chat_geral', '${id}')">Excluir</button>` : "";
-                    lista.innerHTML += `
-                        <div class="msg-container ${d.nome === meuNome ? 'me' : ''}">
-                            <div class="msg ${d.nome === meuNome ? 'me' : ''}">
-                                <b style="color:${d.nome === meuNome ? 'black' : 'var(--main)'}; font-size:10px;">${d.nome} • ${d.dataStr || ""}</b>
-                                <div style="font-size:14px; margin-top:2px;">${d.texto}</div>
-                            </div>
-                            ${btnDel}
-                        </div>`;
+                    lista.innerHTML += `<div style="background:#1e293b; padding:10px; border-radius:10px; margin-bottom:5px;"><b style="color:var(--main)">${d.nome}</b>: ${d.texto}</div>`;
                 });
                 lista.scrollTop = lista.scrollHeight;
             });
         }
 
-        // --- CHAT PRIVADO E STATUS ---
+        window.enviarGeral = () => {
+            const txt = document.getElementById('chatGeralInput').value;
+            if(txt.trim()) {
+                addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now() });
+                document.getElementById('chatGeralInput').value = "";
+            }
+        };
+
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios');
@@ -229,15 +249,8 @@
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
                         const d = u.data();
-                        const dot = d.online ? '<div class="status-dot"></div>' : '';
-                        lista.innerHTML += `
-                            <div class="user-card" onclick="abrirChat('${u.id}')">
-                                <div class="avatar-container">
-                                    <div class="avatar">${u.id[0]}</div>
-                                    ${dot}
-                                </div>
-                                <b>${u.id} ${d.online ? '<small>(online)</small>' : ''}</b>
-                            </div>`;
+                        const status = d.online ? '<span style="color:#00ff00">●</span>' : '';
+                        lista.innerHTML += `<div class="user-card" onclick="abrirChat('${u.id}')"><div class="avatar">${u.id[0]}</div><b>${u.id} ${status}</b><div class="bio-text">${d.bio || ''}</div></div>`;
                     }
                 });
             });
@@ -248,20 +261,13 @@
             document.getElementById('janela-chat').classList.remove('hidden');
             document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
-            const caminhoPrivado = `chats/${chatId}/mensagens`;
             if(unsubChat) unsubChat();
-            unsubChat = onSnapshot(query(collection(db, caminhoPrivado), orderBy("data")), (snap) => {
+            unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
                 const box = document.getElementById('mensagens-privadas');
                 box.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data();
-                    const msgId = m.id;
-                    const btnDel = d.de === meuNome ? `<button class="btn-del" onclick="excluirMsg('${caminhoPrivado}', '${msgId}')">Excluir</button>` : "";
-                    box.innerHTML += `
-                        <div class="msg-container ${d.de === meuNome ? 'me' : ''}">
-                            <div class="msg ${d.de === meuNome ? 'me' : ''}">${d.texto}</div>
-                            ${btnDel}
-                        </div>`;
+                    box.innerHTML += `<div class="msg ${d.de === meuNome ? 'me' : ''}">${d.texto}</div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
@@ -271,7 +277,7 @@
             const input = document.getElementById('msgPrivadaInput');
             if(input.value.trim() && chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
-                addDoc(collection(db, "chats", chatId, "mensagens"), { de: meuNome, texto: input.value, data: Date.now() });
+                addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: input.value, data: Date.now() });
                 input.value = "";
             }
         };
