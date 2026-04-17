@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Social</title>
+    <title>StackNet | Pro</title>
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
@@ -24,23 +24,28 @@
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .avatar-container { position: relative; }
         .avatar { width: 40px; height: 40px; background: var(--main); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; }
+        .status-dot { width: 12px; height: 12px; background: #00ff00; border: 2px solid var(--card); border-radius: 50%; position: absolute; bottom: 0; right: 0; }
         .info b { display: block; font-size: 14px; color: var(--main); }
         .info span { font-size: 11px; color: var(--text-gray); }
 
+        /* Like Button */
+        .like-area { margin-top: 10px; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .like-area:hover { color: #ff4444; }
+
         /* Chat */
-        #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding: 10px; }
+        #chat-geral-lista, #mensagens-privadas { height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding: 10px; }
         .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
         .chat-top { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
         
         .msg-container { display: flex; flex-direction: column; position: relative; max-width: 80%; }
-        .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; word-wrap: break-word; position: relative; }
+        .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; word-wrap: break-word; }
         .me { align-self: flex-end; background: var(--main); color: black; }
         
-        /* Botão excluir */
-        .btn-del { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; padding: 0; margin-top: 2px; text-align: right; font-weight: bold; }
-        .del-post { position: absolute; top: 15px; right: 15px; color: #ff4444; font-size: 12px; cursor: pointer; }
+        .btn-del { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; text-align: right; margin-top: 2px; }
+        .del-post { position: absolute; top: 15px; right: 15px; color: #ff4444; font-size: 11px; cursor: pointer; }
 
     </style>
 </head>
@@ -59,7 +64,7 @@
             <button onclick="mudarAba('feed')">🔥 Feed</button>
             <button onclick="mudarAba('chat-geral')">💬 Geral</button>
             <button onclick="mudarAba('users')">👥 Privado</button>
-            <button onclick="location.reload()" style="color: #f44; border-color: #f44;">Sair</button>
+            <button onclick="sair()" style="color: #f44; border-color: #f44;">Sair</button>
         </nav>
 
         <div id="aba-feed" class="aba">
@@ -97,7 +102,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -127,11 +132,18 @@
                 meuNome = nome;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
-                await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome });
+                
+                // Salva como online
+                await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true });
                 ouvirUsuarios();
                 ouvirFeed();
                 ouvirChatGeral();
             }
+        };
+
+        window.sair = async () => {
+            await updateDoc(doc(db, "usuarios", meuNome), { online: false });
+            location.reload();
         };
 
         window.mudarAba = (aba) => {
@@ -139,18 +151,20 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        // --- FUNÇÃO PARA EXCLUIR ---
         window.excluirMsg = async (caminho, id) => {
-            if(confirm("Deseja excluir esta mensagem?")) {
-                await deleteDoc(doc(db, caminho, id));
-            }
+            if(confirm("Deseja excluir?")) await deleteDoc(doc(db, caminho, id));
+        };
+
+        // --- LIKES ---
+        window.darLike = async (postId) => {
+            await updateDoc(doc(db, "posts", postId), { likes: increment(1) });
         };
 
         // --- FEED ---
         window.postar = () => {
             const txt = document.getElementById('postInput').value;
             if(txt.trim()) {
-                addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData() });
+                addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData(), likes: 0 });
                 document.getElementById('postInput').value = "";
             }
         };
@@ -171,6 +185,7 @@
                                 <div class="info"><b>${d.nome}</b><span>${d.dataStr || ""}</span></div>
                             </div>
                             <div style="line-height:1.4">${d.content}</div>
+                            <div class="like-area" onclick="darLike('${id}')">❤️ ${d.likes || 0} Curtidas</div>
                         </div>`;
                 });
             });
@@ -206,14 +221,23 @@
             });
         }
 
-        // --- CHAT PRIVADO ---
+        // --- CHAT PRIVADO E STATUS ---
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios');
                 lista.innerHTML = "";
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
-                        lista.innerHTML += `<div class="user-card" onclick="abrirChat('${u.id}')"><div class="avatar">${u.id[0]}</div><b>${u.id}</b></div>`;
+                        const d = u.data();
+                        const dot = d.online ? '<div class="status-dot"></div>' : '';
+                        lista.innerHTML += `
+                            <div class="user-card" onclick="abrirChat('${u.id}')">
+                                <div class="avatar-container">
+                                    <div class="avatar">${u.id[0]}</div>
+                                    ${dot}
+                                </div>
+                                <b>${u.id} ${d.online ? '<small>(online)</small>' : ''}</b>
+                            </div>`;
                     }
                 });
             });
@@ -225,7 +249,6 @@
             document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
             const caminhoPrivado = `chats/${chatId}/mensagens`;
-            
             if(unsubChat) unsubChat();
             unsubChat = onSnapshot(query(collection(db, caminhoPrivado), orderBy("data")), (snap) => {
                 const box = document.getElementById('mensagens-privadas');
