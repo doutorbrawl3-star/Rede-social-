@@ -13,31 +13,27 @@
         #auth-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); text-align: center; width: 280px; }
         h1 span { color: var(--main); }
-        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         button { background: var(--main); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
 
         /* Nav */
         nav { background: var(--card); padding: 10px; display: flex; justify-content: space-around; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-        nav button { background: transparent; border: 1px solid var(--border); color: white; width: auto; padding: 5px 10px; font-size: 12px; }
+        nav button { background: transparent; border: 1px solid var(--border); color: white; width: auto; padding: 5px 10px; font-size: 12px; border-radius: 5px; }
 
-        /* Estrutura de Posts e Chat */
+        /* Feed e Cards */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; }
-        
-        /* Cabeçalho do Post/Mensagem */
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: var(--main); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; }
         .info b { display: block; font-size: 14px; color: var(--main); }
         .info span { font-size: 11px; color: var(--text-gray); }
 
-        /* Chat Geral */
-        #chat-geral-lista { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-
-        /* Janela Chat Privado */
+        /* Chat */
+        #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding: 10px; }
+        .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
-        .chat-top { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
-        #mensagens-privadas { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .msg { padding: 10px; border-radius: 10px; background: #30363d; max-width: 80%; font-size: 14px; }
+        .chat-top { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
+        .msg { padding: 10px; border-radius: 10px; background: #30363d; max-width: 80%; font-size: 14px; word-wrap: break-word; }
         .me { align-self: flex-end; background: var(--main); color: black; }
     </style>
 </head>
@@ -56,36 +52,36 @@
             <button onclick="mudarAba('feed')">🔥 Feed</button>
             <button onclick="mudarAba('chat-geral')">💬 Geral</button>
             <button onclick="mudarAba('users')">👥 Privado</button>
-            <button onclick="location.reload()" style="color: #f44;">Sair</button>
+            <button onclick="location.reload()" style="color: #f44; border-color: #f44;">Sair</button>
         </nav>
 
         <div id="aba-feed" class="aba">
             <textarea id="postInput" placeholder="O que está acontecendo?"></textarea>
-            <button onclick="postar()">Publicar Post</button>
+            <button onclick="postar()" style="background: var(--main); color: black;">Publicar Post</button>
             <div id="feed-lista" style="margin-top: 20px;"></div>
         </div>
 
         <div id="aba-chat-geral" class="aba hidden">
             <h3>Chat Geral</h3>
             <div id="chat-geral-lista"></div>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" id="chatGeralInput" placeholder="Mensagem para todos..." style="margin:0">
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="chatGeralInput" placeholder="Mensagem..." style="margin:0">
                 <button onclick="enviarGeral()" style="width: 80px;">Enviar</button>
             </div>
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <h3>Conversas Privadas</h3>
+            <h3>Pessoas</h3>
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden">
                 <div class="chat-top">
-                    <button onclick="fecharChat()" style="width: auto; padding: 5px 10px;">⬅ Voltar</button>
+                    <button onclick="fecharChat()" style="width: auto; padding: 5px 12px; background:#333; color:white;">⬅ Voltar</button>
                     <b id="chat-com-nome"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
-                <div style="padding: 15px; display: flex; gap: 5px; background: var(--card);">
-                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." style="margin:0">
+                <div style="padding: 15px; display: flex; gap: 8px; background: var(--card); border-top: 1px solid var(--border);">
+                    <input type="text" id="msgPrivadaInput" placeholder="Mensagem..." style="margin:0">
                     <button onclick="enviarPrivado()" style="width: 60px;">➤</button>
                 </div>
             </div>
@@ -113,6 +109,13 @@
         let chatAtivoId = "";
         let unsubChat = null;
 
+        const formataData = () => {
+            const d = new Date();
+            const horas = String(d.getHours()).padStart(2, '0');
+            const minutos = String(d.getMinutes()).padStart(2, '0');
+            return `${d.getDate()}/${d.getMonth()+1} às ${horas}:${minutos}`;
+        };
+
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
@@ -131,15 +134,9 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        const formataData = () => {
-            const d = new Date();
-            return `${d.getDate()}/${d.getMonth()+1} às ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-        };
-
-        // --- FEED ---
         window.postar = () => {
             const txt = document.getElementById('postInput').value;
-            if(txt) {
+            if(txt.trim()) {
                 addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData() });
                 document.getElementById('postInput').value = "";
             }
@@ -151,11 +148,12 @@
                 feed.innerHTML = "";
                 snap.forEach(p => {
                     const d = p.data();
+                    const dataExibir = d.dataStr ? d.dataStr : ""; // Só mostra se não for undefined
                     feed.innerHTML += `
                         <div class="post-card">
                             <div class="card-header">
                                 <div class="avatar">${d.nome[0]}</div>
-                                <div class="info"><b>${d.nome}</b><span>${d.dataStr}</span></div>
+                                <div class="info"><b>${d.nome}</b><span>${dataExibir}</span></div>
                             </div>
                             <div style="line-height:1.4">${d.content}</div>
                         </div>`;
@@ -163,10 +161,9 @@
             });
         }
 
-        // --- CHAT GERAL ---
         window.enviarGeral = () => {
             const txt = document.getElementById('chatGeralInput').value;
-            if(txt) {
+            if(txt.trim()) {
                 addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData() });
                 document.getElementById('chatGeralInput').value = "";
             }
@@ -180,15 +177,14 @@
                     const d = m.data();
                     lista.innerHTML += `
                         <div style="background:#1e293b; padding:10px; border-radius:10px;">
-                            <b style="color:var(--main); font-size:12px;">${d.nome} • ${d.dataStr}</b>
-                            <div style="font-size:14px;">${d.texto}</div>
+                            <b style="color:var(--main); font-size:11px;">${d.nome} • ${d.dataStr || ""}</b>
+                            <div style="font-size:14px; margin-top:3px;">${d.texto}</div>
                         </div>`;
                 });
                 lista.scrollTop = lista.scrollHeight;
             });
         }
 
-        // --- CHAT PRIVADO ---
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios');
@@ -220,7 +216,7 @@
 
         window.enviarPrivado = () => {
             const input = document.getElementById('msgPrivadaInput');
-            if(input.value && chatAtivoId) {
+            if(input.value.trim() && chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
                 addDoc(collection(db, "chats", chatId, "mensagens"), { de: meuNome, texto: input.value, data: Date.now() });
                 input.value = "";
