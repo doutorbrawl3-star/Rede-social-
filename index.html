@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V4.1</title>
+    <title>StackNet | Pro V4.2</title>
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
@@ -12,6 +12,7 @@
         /* Nav */
         nav { background: var(--card); padding: 10px; display: flex; justify-content: space-around; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
         nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; position: relative; font-size: 13px; }
+        .notif-ponto { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; position: absolute; top: -2px; right: -2px; border: 2px solid var(--card); }
 
         /* Perfil e Temas */
         .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
@@ -19,26 +20,36 @@
         /* Feed e Cards */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
+        .info b { display: block; font-size: 14px; color: var(--main); }
+        .info span { font-size: 11px; color: var(--text-gray); }
+        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; }
 
-        /* CHAT CORRIGIDO */
-        #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; }
+        /* Ações (Like, Comentar, Excluir) */
+        .like-area { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; background: #30363d; padding: 5px 10px; border-radius: 20px; }
+        .curtido { color: #ff4444; }
+        .del-topo { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff4444; font-weight: bold; cursor: pointer; }
+
+        /* Comentários */
+        .comentario-box { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
+
+        /* Listas (Geral, Pessoas e Chat) */
+        .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
         
-        .msg-container { display: flex; flex-direction: column; max-width: 75%; width: fit-content; }
-        
-        /* Mensagem do Outro (Esquerda) */
+        /* Balões de Chat (Serve para Geral e Privado) */
+        .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
         .msg-container.other { align-self: flex-start; }
-        .msg-container.other .msg { border-radius: 15px 15px 15px 2px; color: white; }
-
-        /* Minha Mensagem (Direita) */
+        .msg-container.other .msg { border-radius: 15px 15px 15px 2px; }
         .msg-container.me { align-self: flex-end; }
-        .msg-container.me .msg { border-radius: 15px 15px 2px 15px; color: black; }
-
+        .msg-container.me .msg { border-radius: 15px 15px 2px 15px; }
         .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
-        .status-digitando { font-size: 11px; color: var(--main); font-style: italic; padding: 5px 15px; background: #000; height: 20px; }
+        .btn-del { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; padding: 2px; text-align: right; }
 
-        input, textarea { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        .status-digitando { font-size: 11px; color: var(--main); font-style: italic; padding: 5px 15px; height: 15px; }
+
+        input, textarea { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -60,52 +71,58 @@
             <button onclick="sair()" style="color:#f44">Sair</button>
         </nav>
 
+        <div id="aba-perfil" class="aba hidden">
+            <div style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:1px solid var(--border);">
+                <div class="avatar" id="perf-avatar" style="width:70px; height:70px; margin:0 auto; font-size:28px;"></div>
+                <h2 id="perf-nome" style="color:var(--main); margin:15px 0;"></h2>
+                <p style="font-size:14px; margin-bottom:5px;">Escolha sua cor:</p>
+                <div class="tema-btn" style="background:#00ff88" onclick="mudarCor('#00ff88')"></div>
+                <div class="tema-btn" style="background:#0084ff" onclick="mudarCor('#0084ff')"></div>
+                <div class="tema-btn" style="background:#a333ff" onclick="mudarCor('#a333ff')"></div>
+                <div class="tema-btn" style="background:#ff8800" onclick="mudarCor('#ff8800')"></div>
+                <textarea id="bioInput" style="margin-top:15px;" placeholder="Sua biografia..."></textarea>
+                <button onclick="salvarBio()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Salvar Perfil</button>
+            </div>
+        </div>
+
+        <div id="aba-feed" class="aba">
+            <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+                <textarea id="postInput" placeholder="O que há de novo? (Cole um link de imagem!)" style="margin-bottom:10px;"></textarea>
+                <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Publicar</button>
+            </div>
+            <div id="feed-lista"></div>
+        </div>
+
+        <div id="aba-chat-geral" class="aba hidden">
+            <div id="chat-geral-lista"></div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="chatGeralInput" placeholder="Mensagem para todos..." style="margin:0">
+                <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; width:80px; font-weight:bold;">Enviar</button>
+            </div>
+        </div>
+
         <div id="aba-users" class="aba hidden">
             <input type="text" id="buscaUsuario" placeholder="🔍 Procurar amigo..." oninput="filtrarUsuarios()">
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
                 <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border);">
-                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅</button>
-                    <b id="chat-com-nome"></b>
+                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">⬅ Voltar</button>
+                    <b id="chat-com-nome" style="font-size:16px;"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
                 <div id="texto-digitando" class="status-digitando"></div>
                 <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border);">
-                    <input type="text" id="msgPrivadaInput" placeholder="Mensagem..." oninput="avisarDigitando()" style="margin:0">
+                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0">
                     <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:50px; cursor:pointer; font-weight:bold;">➤</button>
                 </div>
             </div>
-        </div>
-
-        <div id="aba-feed" class="aba">
-            <textarea id="postInput" placeholder="O que há de novo?"></textarea>
-            <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Publicar</button>
-            <div id="feed-lista" style="margin-top:20px;"></div>
-        </div>
-
-        <div id="aba-perfil" class="aba hidden">
-            <div style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:1px solid var(--border);">
-                <h2 id="perf-nome"></h2>
-                <p>Mudar minha cor:</p>
-                <div class="tema-btn" style="background:#00ff88" onclick="mudarCor('#00ff88')"></div>
-                <div class="tema-btn" style="background:#0084ff" onclick="mudarCor('#0084ff')"></div>
-                <div class="tema-btn" style="background:#a333ff" onclick="mudarCor('#a333ff')"></div>
-                <div class="tema-btn" style="background:#ff8800" onclick="mudarCor('#ff8800')"></div>
-                <textarea id="bioInput" style="margin-top:15px;" placeholder="Sua biografia..."></textarea>
-                <button onclick="salvarBio()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Salvar Perfil</button>
-            </div>
-        </div>
-
-        <div id="aba-chat-geral" class="aba hidden">
-            <div id="chat-geral-lista" style="height:60vh; overflow-y:auto; padding:10px; background:#000; border-radius:10px; margin-bottom:10px;"></div>
-            <div style="display:flex; gap:5px;"><input type="text" id="chatGeralInput" style="margin:0"><button onclick="enviarGeral()">Enviar</button></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -120,55 +137,191 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", digitandoTimeout;
+        let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", abaAtiva = "feed", digitandoTimeout;
 
+        const formataData = () => {
+            const d = new Date();
+            return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        };
+
+        // --- SISTEMA CORE ---
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
                 meuNome = nome;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
+                
                 const userDoc = await getDoc(doc(db, "usuarios", meuNome));
-                if(userDoc.exists()) { minhaCor = userDoc.data().cor || "#00ff88"; }
+                if(userDoc.exists()) minhaCor = userDoc.data().cor || "#00ff88";
                 document.documentElement.style.setProperty('--main', minhaCor);
+                
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true, cor: minhaCor }, { merge: true });
-                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral();
+                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes();
             }
         };
 
-        window.mudarCor = (cor) => { 
-            minhaCor = cor; 
-            document.documentElement.style.setProperty('--main', cor); 
+        window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
+
+        window.mudarAba = (aba) => {
+            abaAtiva = aba;
+            if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
+            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
+            document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        window.salvarBio = async () => {
-            await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor });
-            alert("Perfil Salvo!");
+        window.excluirItem = async (caminho, id) => {
+            if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id));
         };
 
-        window.abrirChat = (id, corOutro) => {
-            chatAtivoId = id;
-            document.getElementById('janela-chat').classList.remove('hidden');
+        // --- PERFIL E CORES ---
+        window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
+        window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor }); alert("Perfil Salvo!"); };
+        async function carregarPerfil() {
+            const d = await getDoc(doc(db, "usuarios", meuNome));
+            if(d.exists()) {
+                document.getElementById('perf-nome').innerText = meuNome;
+                document.getElementById('perf-avatar').innerText = meuNome[0];
+                document.getElementById('perf-avatar').style.background = minhaCor;
+                document.getElementById('bioInput').value = d.data().bio || "";
+            }
+        }
+
+        // --- FEED E COMENTÁRIOS ---
+        window.postar = async () => {
+            const txt = document.getElementById('postInput').value;
+            const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
+            if(txt.trim()) {
+                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor });
+                document.getElementById('postInput').value = "";
+            }
+        };
+
+        window.toggleLike = async (postId) => {
+            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+            const index = curtidos.indexOf(postId);
+            if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } 
+            else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); }
+            localStorage.setItem('curtidos', JSON.stringify(curtidos));
+        };
+
+        window.comentar = async (postId) => {
+            const msg = prompt("Deixe seu comentário:");
+            if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); }
+        };
+
+        function ouvirFeed() {
+            onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
+                const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
+                const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+                snap.forEach(p => {
+                    const d = p.data();
+                    const ehCurtido = curtidos.includes(p.id);
+                    const btnDel = d.nome === meuNome ? `<button class="del-topo" onclick="excluirItem('posts', '${p.id}')">X</button>` : "";
+                    
+                    // Renderiza Comentários
+                    let comentariosHTML = "";
+                    if(d.comentarios && d.comentarios.length > 0) {
+                        d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; });
+                    }
+
+                    feed.innerHTML += `
+                        <div class="post-card">
+                            ${btnDel}
+                            <div class="card-header">
+                                <div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div>
+                                <div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b><span>${d.dataStr || ""}</span></div>
+                            </div>
+                            <div style="font-size:15px; margin-bottom:10px;">${d.content}</div>
+                            ${d.img ? `<img src="${d.img}" class="post-img">` : ""}
+                            
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div>
+                                <div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div>
+                            </div>
+                            
+                            <div style="margin-top:10px;">${comentariosHTML}</div>
+                        </div>`;
+                });
+            });
+        }
+
+        // --- CHAT GERAL ---
+        window.enviarGeral = async () => {
+            const txt = document.getElementById('chatGeralInput').value;
+            if(txt.trim()) { await addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor }); document.getElementById('chatGeralInput').value = ""; }
+        };
+
+        function ouvirChatGeral() {
+            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
+                const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
+                snap.forEach(m => {
+                    const d = m.data(); const souEu = d.nome === meuNome;
+                    const corBalao = souEu ? minhaCor : "#30363d";
+                    const corTexto = souEu ? "black" : "white";
+                    const btnDel = souEu ? `<button class="btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>` : "";
+                    
+                    lista.innerHTML += `
+                        <div class="msg-container ${souEu ? 'me' : 'other'}">
+                            <div class="msg" style="background:${corBalao}; color:${corTexto};">
+                                <b style="font-size:10px; opacity:0.6;">${d.nome} • ${d.dataStr || ""}</b><br>
+                                ${d.texto}
+                            </div>
+                            ${btnDel}
+                        </div>`;
+                });
+                lista.scrollTop = lista.scrollHeight;
+            });
+        }
+
+        // --- LISTA DE USUÁRIOS E CHAT PRIVADO ---
+        window.filtrarUsuarios = () => {
+            const b = document.getElementById('buscaUsuario').value.toLowerCase();
+            document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b)));
+        };
+
+        function ouvirUsuarios() {
+            onSnapshot(collection(db, "usuarios"), (snap) => {
+                const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
+                snap.forEach(u => {
+                    if(u.id !== meuNome) {
+                        const d = u.data();
+                        lista.innerHTML += `
+                            <div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')">
+                                <div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div>
+                                <div>
+                                    <b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>
+                                    <div style="font-size:12px; color:var(--text-gray)">${d.bio || '...'}</div>
+                                </div>
+                            </div>`;
+                    }
+                });
+            });
+        }
+
+                window.abrirChat = (id, corOutro) => {
+            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden');
             document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
             
             onSnapshot(doc(db, "digitando", chatId), (d) => {
-                const text = d.exists() && d.data()[id] ? `${id} está digitando...` : "";
-                document.getElementById('texto-digitando').innerText = text;
+                document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "";
             });
 
             if(window.unsubChat) window.unsubChat();
             window.unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
-                const box = document.getElementById('mensagens-privadas');
-                box.innerHTML = "";
+                const box = document.getElementById('mensagens-privadas'); box.innerHTML = "";
                 snap.forEach(m => {
-                    const d = m.data();
-                    const souEu = d.de === meuNome;
-                    const corBalao = souEu ? minhaCor : (corOutro || "#30363d");
+                    const d = m.data(); const souEu = d.de === meuNome;
+                    const btnDel = souEu ? `<button class="btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>` : "";
                     
                     box.innerHTML += `
                         <div class="msg-container ${souEu ? 'me' : 'other'}">
-                            <div class="msg" style="background:${corBalao};">${d.texto}</div>
+                            <div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">
+                                ${d.texto}
+                                <div style="font-size:9px; opacity:0.6; margin-top:3px; text-align:right;">${d.dataStr || ""}</div>
+                            </div>
+                            ${btnDel}
                         </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
@@ -180,8 +333,9 @@
             if(input.value.trim() && chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
                 const txt = input.value; input.value = "";
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now() });
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: formataData() });
                 await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
             }
         };
 
@@ -190,72 +344,11 @@
             const chatId = [meuNome, chatAtivoId].sort().join("_");
             await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true });
             clearTimeout(digitandoTimeout);
-            digitandoTimeout = setTimeout(async () => {
-                await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
-            }, 2000);
+            digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000);
         };
 
-        // Funções de Interface
-        window.mudarAba = (aba) => {
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
-        };
         window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
-        window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
-
-        function ouvirUsuarios() {
-            onSnapshot(collection(db, "usuarios"), (snap) => {
-                const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
-                snap.forEach(u => {
-                    if(u.id !== meuNome) {
-                        const d = u.data();
-                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')" style="background:var(--card); padding:12px; margin-bottom:8px; border-radius:10px; display:flex; align-items:center; gap:12px; border:1px solid var(--border); cursor:pointer;">
-                            <div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div>
-                            <b>${u.id}</b>
-                        </div>`;
-                    }
-                });
-            });
-        }
-
-        window.postar = async () => {
-            const txt = document.getElementById('postInput').value;
-            if(txt.trim()) {
-                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), likes: 0 });
-                document.getElementById('postInput').value = "";
-            }
-        };
-
-        function ouvirFeed() {
-            onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
-                const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
-                snap.forEach(p => {
-                    const d = p.data();
-                    feed.innerHTML += `<div class="post-card"><b>${d.nome}</b><p>${d.content}</p></div>`;
-                });
-            });
-        }
-
-        function ouvirChatGeral() {
-            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (s) => {
-                const l = document.getElementById('chat-geral-lista'); l.innerHTML = "";
-                s.forEach(m => { l.innerHTML += `<div><b>${m.data().nome}:</b> ${m.data().texto}</div>`; });
-                l.scrollTop = l.scrollHeight;
-            });
-        }
-        
-        window.enviarGeral = () => {
-            const i = document.getElementById('chatGeralInput');
-            if(i.value) { addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: i.value, data: Date.now() }); i.value = ""; }
-        };
-
-        async function carregarPerfil() {
-            const d = await getDoc(doc(db, "usuarios", meuNome));
-            if(d.exists()) {
-                document.getElementById('perf-nome').innerText = "Olá, " + meuNome;
-                document.getElementById('bioInput').value = d.data().bio || "";
-            }
-        }
+        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
     </script>
 </body>
 </html>
