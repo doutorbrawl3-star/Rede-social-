@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00ff88">
-<meta name="apple-mobile-web-app-capable" content="yes">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V5.1</title>
+    <title>StackNet | Pro V6.0</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff88">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
@@ -17,35 +18,29 @@
         nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; position: relative; font-size: 13px; }
         .notif-ponto { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; position: absolute; top: -2px; right: -2px; border: 2px solid var(--card); }
 
-        /* Perfil e Temas */
+        /* Perfil */
         .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
         .contadores { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        .contadores div { text-align: center; }
-
-        /* Feed e Cards */
+        
+        /* Feed */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
-        .info b { display: block; font-size: 14px; color: var(--main); }
-        .info span { font-size: 11px; color: var(--text-gray); }
         .post-img { width: 100%; border-radius: 8px; margin-top: 10px; }
-        .editado-tag { font-size: 10px; font-style: italic; opacity: 0.7; margin-left: 5px; }
-
-        /* Ações (Like, Comentar, Excluir, Editar) */
+        
+        /* Ações e Like */
         .like-area { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; background: #30363d; padding: 5px 10px; border-radius: 20px; }
         .curtido { color: #ff4444; }
         .acoes-topo { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
-        .btn-acao { background: none; border: none; font-size: 11px; font-weight: bold; cursor: pointer; padding: 0; }
-        .btn-del { color: #ff4444; }
-        .btn-edit { color: var(--main); }
+        .btn-acao { background: none; border: none; font-size: 11px; font-weight: bold; cursor: pointer; padding: 0; color: var(--text-gray); }
+        .btn-acao:hover { color: white; }
 
         /* Comentários */
         .comentario-box { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
 
-        /* Listas e Chat */
+        /* Chat e Respostas */
         .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .user-info-area { display: flex; align-items: center; gap: 12px; }
         .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
         
@@ -58,8 +53,10 @@
         .msg-container.me .msg { border-radius: 15px 15px 2px 15px; }
         .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
-
-        .status-digitando { font-size: 11px; color: var(--main); font-style: italic; padding: 5px 15px; height: 15px; }
+        
+        /* Sistema de Reply (Citação) */
+        .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
+        .preview-reply { background: var(--card); padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 12px; display: flex; justify-content: space-between; border: 1px solid var(--border); border-bottom: none; align-items: center; }
 
         input, textarea { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
     </style>
@@ -102,6 +99,8 @@
                 </div>
                 <textarea id="bioInput" placeholder="Sua biografia..."></textarea>
                 <button onclick="salvarBio()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Salvar Perfil</button>
+                
+                <button id="btn-instalar" onclick="instalarApp()" class="hidden" style="background:#0084ff; color:white; border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">📲 Instalar StackNet</button>
             </div>
         </div>
 
@@ -115,6 +114,12 @@
 
         <div id="aba-chat-geral" class="aba hidden">
             <div id="chat-geral-lista"></div>
+            
+            <div id="preview-reply-geral" class="preview-reply hidden">
+                <span id="text-reply-geral" style="opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;"></span>
+                <button onclick="cancelarResposta('geral')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
+            </div>
+            
             <div style="display:flex; gap:8px;">
                 <input type="text" id="chatGeralInput" placeholder="Mensagem para todos..." style="margin:0">
                 <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; width:80px; font-weight:bold;">Enviar</button>
@@ -127,11 +132,17 @@
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
                 <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border);">
-                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">⬅ Voltar</button>
+                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">⬅</button>
                     <b id="chat-com-nome" style="font-size:16px;"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
                 <div id="texto-digitando" class="status-digitando"></div>
+                
+                <div id="preview-reply-privado" class="preview-reply hidden" style="border-radius:0;">
+                    <span id="text-reply-privado" style="opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;"></span>
+                    <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
+                </div>
+                
                 <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border);">
                     <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0">
                     <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:50px; cursor:pointer; font-weight:bold;">➤</button>
@@ -159,8 +170,32 @@
 
         let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", abaAtiva = "feed", digitandoTimeout;
         let meusSeguindo = []; 
+        let replyingToGeral = null;
+        let replyingToPrivado = null;
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+        // --- SISTEMA PWA (INSTALAÇÃO) ---
+        let instalador;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            instalador = e;
+            document.getElementById('btn-instalar').classList.remove('hidden'); // Mostra botão
+        });
+
+        window.instalarApp = async () => {
+            if(instalador) {
+                instalador.prompt();
+                const { outcome } = await instalador.userChoice;
+                if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden');
+                instalador = null;
+            }
+        };
+
+        // Registra o Service Worker (necessário para instalar)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
+        }
 
         // --- SISTEMA CORE ---
         window.entrar = async () => {
@@ -169,7 +204,6 @@
                 meuNome = nome;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
-                
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
                 carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes();
             }
@@ -186,38 +220,42 @@
 
         window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
 
-        // --- EDIÇÃO ---
-        window.editarItem = async (caminho, id, campo, textoAntigo) => {
-            const novo = prompt("Editar mensagem:", textoAntigo);
-            if(novo && novo.trim() !== "" && novo !== textoAntigo) {
-                await updateDoc(doc(db, caminho, id), { [campo]: novo, editado: true });
-            }
-        };
-
-        // --- SEGUIR ---
-        window.toggleSeguir = async (idOutro, event) => {
-            event.stopPropagation(); // Não abrir chat ao clicar em seguir
-            const ref = doc(db, "usuarios", meuNome);
-            if(meusSeguindo.includes(idOutro)) {
-                await updateDoc(ref, { seguindo: arrayRemove(idOutro) });
+        // --- SISTEMA DE RESPOSTAS (REPLY) ---
+        window.prepararResposta = (id, nome, texto, tipo) => {
+            const txtLindo = texto.replace(/\\'/g, "'"); // Arruma aspas se tiver
+            if (tipo === 'geral') {
+                replyingToGeral = { nome, texto: txtLindo };
+                document.getElementById('preview-reply-geral').classList.remove('hidden');
+                document.getElementById('text-reply-geral').innerText = `Responder a ${nome}: ${txtLindo}`;
+                document.getElementById('chatGeralInput').focus();
             } else {
-                await updateDoc(ref, { seguindo: arrayUnion(idOutro) });
+                replyingToPrivado = { nome, texto: txtLindo };
+                document.getElementById('preview-reply-privado').classList.remove('hidden');
+                document.getElementById('text-reply-privado').innerText = `Responder a ${nome}: ${txtLindo}`;
+                document.getElementById('msgPrivadaInput').focus();
             }
         };
 
-        // --- PERFIL E CORES ---
+        window.cancelarResposta = (tipo) => {
+            if (tipo === 'geral') {
+                replyingToGeral = null;
+                document.getElementById('preview-reply-geral').classList.add('hidden');
+            } else {
+                replyingToPrivado = null;
+                document.getElementById('preview-reply-privado').classList.add('hidden');
+            }
+        };
+
+        // Restante das funções de Perfil, Edição, Seguir, Feed, Chat Geral e Chat Privado (igual à v5.1, com suporte ao reply)...
+        
         window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
         window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor }); alert("Perfil Salvo!"); };
-        
         async function carregarPerfil() {
-            // Escuta dados do meu usuário
             onSnapshot(doc(db, "usuarios", meuNome), (d) => {
                 if(d.exists()) {
                     const dados = d.data();
-                    minhaCor = dados.cor || "#00ff88";
-                    meusSeguindo = dados.seguindo || [];
+                    minhaCor = dados.cor || "#00ff88"; meusSeguindo = dados.seguindo || [];
                     document.documentElement.style.setProperty('--main', minhaCor);
-                    
                     document.getElementById('perf-nome').innerText = meuNome;
                     document.getElementById('perf-avatar').innerText = meuNome[0];
                     document.getElementById('perf-avatar').style.background = minhaCor;
@@ -225,80 +263,38 @@
                     document.getElementById('num-seguindo').innerText = meusSeguindo.length;
                 }
             });
-
-            // Conta seguidores (pessoas que me têm no array 'seguindo')
-            onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => {
-                document.getElementById('num-seguidores').innerText = snap.size;
-            });
+            onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => document.getElementById('num-seguidores').innerText = snap.size);
         }
 
-        // --- FEED ---
         window.postar = async () => {
-            const txt = document.getElementById('postInput').value;
-            const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
-            if(txt.trim()) {
-                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false });
-                document.getElementById('postInput').value = "";
-            }
+            const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
+            if(txt.trim()) { await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); document.getElementById('postInput').value = ""; }
         };
-
-        window.toggleLike = async (postId) => {
-            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
-            const index = curtidos.indexOf(postId);
-            if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } 
-            else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); }
-            localStorage.setItem('curtidos', JSON.stringify(curtidos));
-        };
-
-        window.comentar = async (postId) => {
-            const msg = prompt("Deixe seu comentário:");
-            if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); }
-        };
-
+        window.toggleLike = async (postId) => { let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]"); const index = curtidos.indexOf(postId); if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); } localStorage.setItem('curtidos', JSON.stringify(curtidos)); };
+        window.comentar = async (postId) => { const msg = prompt("Deixe seu comentário:"); if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); } };
+        window.editarItem = async (caminho, id, campo, textoAntigo) => { const novo = prompt("Editar:", textoAntigo); if(novo && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(doc(db, caminho, id), { [campo]: novo, editado: true }); } };
+        window.toggleSeguir = async (idOutro, event) => { event.stopPropagation(); const ref = doc(db, "usuarios", meuNome); if(meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); } };
+        
         function ouvirFeed() {
             onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
                 const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
                 const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
                 snap.forEach(p => {
-                    const d = p.data();
-                    const ehCurtido = curtidos.includes(p.id);
-                    
-                    let acoesTopo = d.nome === meuNome ? `
-                        <div class="acoes-topo">
-                            <button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content', '${d.content.replace(/'/g, "\\'")}')">Editar</button>
-                            <button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button>
-                        </div>` : "";
-                    
-                    let comentariosHTML = "";
-                    if(d.comentarios && d.comentarios.length > 0) {
-                        d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; });
-                    }
-
-                    feed.innerHTML += `
-                        <div class="post-card">
-                            ${acoesTopo}
-                            <div class="card-header">
-                                <div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div>
-                                <div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div>
-                            </div>
-                            <div style="font-size:15px; margin-bottom:10px;">${d.content}</div>
-                            ${d.img ? `<img src="${d.img}" class="post-img">` : ""}
-                            
-                            <div style="display:flex; gap:10px; margin-top:15px;">
-                                <div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div>
-                                <div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div>
-                            </div>
-                            
-                            <div style="margin-top:10px;">${comentariosHTML}</div>
-                        </div>`;
+                    const d = p.data(); const ehCurtido = curtidos.includes(p.id);
+                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content', '${d.content.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
+                    let comentariosHTML = ""; if(d.comentarios) { d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; }); }
+                    feed.innerHTML += `<div class="post-card">${acoesTopo}<div class="card-header"><div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div><div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div></div><div style="font-size:15px; margin-bottom:10px;">${d.content}</div>${d.img ? `<img src="${d.img}" class="post-img">` : ""}<div style="display:flex; gap:10px; margin-top:15px;"><div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div><div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div></div><div style="margin-top:10px;">${comentariosHTML}</div></div>`;
                 });
             });
         }
 
-        // --- CHAT GERAL ---
         window.enviarGeral = async () => {
             const txt = document.getElementById('chatGeralInput').value;
-            if(txt.trim()) { await addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false }); document.getElementById('chatGeralInput').value = ""; }
+            if(txt.trim()) { 
+                await addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false, replyTo: replyingToGeral }); 
+                document.getElementById('chatGeralInput').value = ""; 
+                cancelarResposta('geral');
+            }
         };
 
         function ouvirChatGeral() {
@@ -306,92 +302,50 @@
                 const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data(); const souEu = d.nome === meuNome;
-                    
-                    let botoesMsg = souEu ? `
-                        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;">
-                            <button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button>
-                            <button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>
-                        </div>` : "";
-                    
-                    lista.innerHTML += `
-                        <div class="msg-container ${souEu ? 'me' : 'other'}">
-                            <div class="msg" style="background:${souEu ? minhaCor : '#30363d'}; color:${souEu ? 'black' : 'white'};">
-                                <b style="font-size:10px; opacity:0.6;">${d.nome}</b><br>
-                                ${d.texto}
-                                <div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Editado)</i>' : ''}</div>
-                            </div>
-                            ${botoesMsg}
-                        </div>`;
+                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${d.texto.replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
+                    botoesMsg += `</div>`;
+                    lista.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : '#30363d'}; color:${souEu ? 'black' : 'white'};">${replyHtml}<b style="font-size:10px; opacity:0.6;">${d.nome}</b><br>${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Editado)</i>' : ''}</div></div>${botoesMsg}</div>`;
                 });
                 lista.scrollTop = lista.scrollHeight;
             });
         }
 
-        // --- LISTA DE USUÁRIOS E CHAT PRIVADO ---
-        window.filtrarUsuarios = () => {
-            const b = document.getElementById('buscaUsuario').value.toLowerCase();
-            document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b)));
-        };
+        window.filtrarUsuarios = () => { const b = document.getElementById('buscaUsuario').value.toLowerCase(); document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b))); };
 
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
-                        const d = u.data();
-                        const taSeguindo = meusSeguindo.includes(u.id);
-                        lista.innerHTML += `
-                            <div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')">
-                                <div class="user-info-area">
-                                    <div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div>
-                                    <div>
-                                        <b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>
-                                        <div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div>
-                                    </div>
-                                </div>
-                                <button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">
-                                    ${taSeguindo ? 'Seguindo' : 'Seguir'}
-                                </button>
-                            </div>`;
+                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id);
+                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b><div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Seguindo' : 'Seguir'}</button></div>`;
                     }
                 });
             });
         }
 
         window.abrirChat = (id, corOutro) => {
-            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden');
-            document.getElementById('chat-com-nome').innerText = id;
+            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden'); document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
-            
-            onSnapshot(doc(db, "digitando", chatId), (d) => {
-                document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "";
-            });
-
+            onSnapshot(doc(db, "digitando", chatId), (d) => document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "");
             if(window.unsubChat) window.unsubChat();
             window.unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
                 const box = document.getElementById('mensagens-privadas'); box.innerHTML = "";
                 snap.docs.forEach(m => {
                     const d = m.data(); const souEu = d.de === meuNome;
-                    
                     if (!souEu && d.lida !== true) updateDoc(doc(db, `chats/${chatId}/mensagens`, m.id), { lida: true });
-
                     let iconLida = souEu ? `<span style="color:${d.lida ? '#000' : 'rgba(0,0,0,0.4)'}; font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>` : "";
                     if(souEu && d.lida && minhaCor === '#000000') iconLida = `<span style="color:var(--main); font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>`;
-
-                    let botoesMsg = souEu ? `
-                        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;">
-                            <button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button>
-                            <button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>
-                        </div>` : "";
                     
-                    box.innerHTML += `
-                        <div class="msg-container ${souEu ? 'me' : 'other'}">
-                            <div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">
-                                ${d.texto}
-                                <div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div>
-                            </div>
-                            ${botoesMsg}
-                        </div>`;
+                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
+                    
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.texto.replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
+                    botoesMsg += `</div>`;
+                    
+                    box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
@@ -402,38 +356,16 @@
             if(input.value.trim() && chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
                 const txt = input.value; input.value = "";
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false });
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado });
                 await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
                 await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+                cancelarResposta('privado');
             }
         };
 
-        window.avisarDigitando = async () => {
-            if(!chatAtivoId) return;
-            const chatId = [meuNome, chatAtivoId].sort().join("_");
-            await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true });
-            clearTimeout(digitandoTimeout);
-            digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000);
-        };
-
-        window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
+        window.avisarDigitando = async () => { if(!chatAtivoId) return; const chatId = [meuNome, chatAtivoId].sort().join("_"); await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true }); clearTimeout(digitandoTimeout); digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000); };
+        window.fecharChat = () => { document.getElementById('janela-chat').classList.add('hidden'); cancelarResposta('privado'); };
         function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
-
-// REGISTRAR SERVICE WORKER PARA INSTALAÇÃO
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-    .then(() => console.log("Service Worker Registrado!"));
-}
-
-// LOGICA PARA O BOTAO DE INSTALAR (OPCIONAL)
-let instalador;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    instalador = e;
-});
-
-// Você pode chamar instalador.prompt() em um botão se quiser
-
     </script>
 </body>
 </html>
