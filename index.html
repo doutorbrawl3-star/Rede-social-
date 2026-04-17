@@ -22,7 +22,7 @@
 
         /* Feed e Cards */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
-        .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: var(--main); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; }
         .info b { display: block; font-size: 14px; color: var(--main); }
@@ -33,8 +33,15 @@
         .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
         .chat-top { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
-        .msg { padding: 10px; border-radius: 10px; background: #30363d; max-width: 80%; font-size: 14px; word-wrap: break-word; }
+        
+        .msg-container { display: flex; flex-direction: column; position: relative; max-width: 80%; }
+        .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; word-wrap: break-word; position: relative; }
         .me { align-self: flex-end; background: var(--main); color: black; }
+        
+        /* Botão excluir */
+        .btn-del { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; padding: 0; margin-top: 2px; text-align: right; font-weight: bold; }
+        .del-post { position: absolute; top: 15px; right: 15px; color: #ff4444; font-size: 12px; cursor: pointer; }
+
     </style>
 </head>
 <body>
@@ -57,7 +64,7 @@
 
         <div id="aba-feed" class="aba">
             <textarea id="postInput" placeholder="O que está acontecendo?"></textarea>
-            <button onclick="postar()" style="background: var(--main); color: black;">Publicar Post</button>
+            <button onclick="postar()">Publicar Post</button>
             <div id="feed-lista" style="margin-top: 20px;"></div>
         </div>
 
@@ -76,7 +83,7 @@
             
             <div id="janela-chat" class="hidden">
                 <div class="chat-top">
-                    <button onclick="fecharChat()" style="width: auto; padding: 5px 12px; background:#333; color:white;">⬅ Voltar</button>
+                    <button onclick="fecharChat()" style="width: auto; padding: 5px 12px; background:#333; color:white; border:none; border-radius:5px;">⬅ Voltar</button>
                     <b id="chat-com-nome"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
@@ -90,7 +97,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -111,9 +118,7 @@
 
         const formataData = () => {
             const d = new Date();
-            const horas = String(d.getHours()).padStart(2, '0');
-            const minutos = String(d.getMinutes()).padStart(2, '0');
-            return `${d.getDate()}/${d.getMonth()+1} às ${horas}:${minutos}`;
+            return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         };
 
         window.entrar = async () => {
@@ -134,6 +139,14 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
+        // --- FUNÇÃO PARA EXCLUIR ---
+        window.excluirMsg = async (caminho, id) => {
+            if(confirm("Deseja excluir esta mensagem?")) {
+                await deleteDoc(doc(db, caminho, id));
+            }
+        };
+
+        // --- FEED ---
         window.postar = () => {
             const txt = document.getElementById('postInput').value;
             if(txt.trim()) {
@@ -148,12 +161,14 @@
                 feed.innerHTML = "";
                 snap.forEach(p => {
                     const d = p.data();
-                    const dataExibir = d.dataStr ? d.dataStr : ""; // Só mostra se não for undefined
+                    const id = p.id;
+                    const btnDel = d.nome === meuNome ? `<span class="del-post" onclick="excluirMsg('posts', '${id}')">Excluir</span>` : "";
                     feed.innerHTML += `
                         <div class="post-card">
+                            ${btnDel}
                             <div class="card-header">
                                 <div class="avatar">${d.nome[0]}</div>
-                                <div class="info"><b>${d.nome}</b><span>${dataExibir}</span></div>
+                                <div class="info"><b>${d.nome}</b><span>${d.dataStr || ""}</span></div>
                             </div>
                             <div style="line-height:1.4">${d.content}</div>
                         </div>`;
@@ -161,6 +176,7 @@
             });
         }
 
+        // --- CHAT GERAL ---
         window.enviarGeral = () => {
             const txt = document.getElementById('chatGeralInput').value;
             if(txt.trim()) {
@@ -175,16 +191,22 @@
                 lista.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data();
+                    const id = m.id;
+                    const btnDel = d.nome === meuNome ? `<button class="btn-del" onclick="excluirMsg('chat_geral', '${id}')">Excluir</button>` : "";
                     lista.innerHTML += `
-                        <div style="background:#1e293b; padding:10px; border-radius:10px;">
-                            <b style="color:var(--main); font-size:11px;">${d.nome} • ${d.dataStr || ""}</b>
-                            <div style="font-size:14px; margin-top:3px;">${d.texto}</div>
+                        <div class="msg-container ${d.nome === meuNome ? 'me' : ''}">
+                            <div class="msg ${d.nome === meuNome ? 'me' : ''}">
+                                <b style="color:${d.nome === meuNome ? 'black' : 'var(--main)'}; font-size:10px;">${d.nome} • ${d.dataStr || ""}</b>
+                                <div style="font-size:14px; margin-top:2px;">${d.texto}</div>
+                            </div>
+                            ${btnDel}
                         </div>`;
                 });
                 lista.scrollTop = lista.scrollHeight;
             });
         }
 
+        // --- CHAT PRIVADO ---
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios');
@@ -202,13 +224,21 @@
             document.getElementById('janela-chat').classList.remove('hidden');
             document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
+            const caminhoPrivado = `chats/${chatId}/mensagens`;
+            
             if(unsubChat) unsubChat();
-            unsubChat = onSnapshot(query(collection(db, "chats", chatId, "mensagens"), orderBy("data")), (snap) => {
+            unsubChat = onSnapshot(query(collection(db, caminhoPrivado), orderBy("data")), (snap) => {
                 const box = document.getElementById('mensagens-privadas');
                 box.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data();
-                    box.innerHTML += `<div class="msg ${d.de === meuNome ? 'me' : ''}">${d.texto}</div>`;
+                    const msgId = m.id;
+                    const btnDel = d.de === meuNome ? `<button class="btn-del" onclick="excluirMsg('${caminhoPrivado}', '${msgId}')">Excluir</button>` : "";
+                    box.innerHTML += `
+                        <div class="msg-container ${d.de === meuNome ? 'me' : ''}">
+                            <div class="msg ${d.de === meuNome ? 'me' : ''}">${d.texto}</div>
+                            ${btnDel}
+                        </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
