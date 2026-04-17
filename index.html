@@ -3,53 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V3</title>
+    <title>StackNet | Pro V3.1</title>
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
         .hidden { display: none !important; }
 
-        /* Login */
-        #auth-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); text-align: center; width: 280px; }
-        h1 span { color: var(--main); }
-        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
-        button { background: var(--main); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-
-        /* Nav & Notificações */
+        /* Nav */
         nav { background: var(--card); padding: 10px; display: flex; justify-content: space-around; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-        nav button { background: transparent; border: 1px solid var(--border); color: white; width: auto; padding: 5px 10px; font-size: 12px; border-radius: 5px; position: relative; }
-        .notif-ponto { width: 8px; height: 8px; background: #ff4444; border-radius: 50%; position: absolute; top: 2px; right: 2px; }
+        nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; position: relative; font-size: 13px; }
+        .notif-ponto { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; position: absolute; top: -2px; right: -2px; border: 2px solid var(--card); }
 
-        /* Posts */
+        /* Cards e Posts */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: var(--main); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; position: relative; }
         .status-dot { width: 10px; height: 10px; background: #00ff00; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card); }
         
-        /* Estilos de Texto e Imagem */
         .info b { display: block; font-size: 14px; color: var(--main); }
         .info span { font-size: 10px; color: var(--text-gray); }
         .post-img { width: 100%; border-radius: 8px; margin-top: 10px; }
-        .like-area { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
-        .curtido { color: #ff4444; }
+        
+        .like-area { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; padding: 5px; border-radius: 5px; }
+        .curtido { color: #ff4444; font-weight: bold; }
+
+        /* Botão Excluir */
+        .btn-del { background: none; border: none; color: #ff4444; font-size: 11px; cursor: pointer; font-weight: bold; padding: 5px; }
+        .del-topo { position: absolute; top: 10px; right: 10px; }
 
         /* Chat */
-        #chat-geral-lista, #mensagens-privadas { height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .msg-container { display: flex; flex-direction: column; max-width: 80%; }
+        #chat-geral-lista, #mensagens-privadas { height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 5px; }
+        .msg-container { display: flex; flex-direction: column; max-width: 80%; margin-bottom: 5px; }
         .msg { padding: 10px; border-radius: 10px; background: #30363d; font-size: 14px; word-wrap: break-word; }
         .me { align-self: flex-end; background: var(--main); color: black; }
-        .del-btn { background: none; border: none; color: #ff4444; font-size: 10px; cursor: pointer; font-weight: bold; }
+        
+        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <div class="auth-box">
+    <div id="auth-screen" style="height:100vh; display:flex; justify-content:center; align-items:center;">
+        <div style="background:var(--card); padding:30px; border-radius:15px; text-align:center; border:1px solid var(--border);">
             <h1>STACK<span>NET</span></h1>
             <input type="text" id="nome-usuario" placeholder="Teu nome...">
-            <button onclick="entrar()">Entrar</button>
+            <button onclick="entrar()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold;">Entrar</button>
         </div>
     </div>
 
@@ -57,48 +55,45 @@
         <nav>
             <button onclick="mudarAba('feed')">🔥 Feed</button>
             <button onclick="mudarAba('chat-geral')">💬 Geral</button>
-            <button onclick="mudarAba('users')">
-                👥 Privado
-                <div id="badge-privado" class="notif-ponto hidden"></div>
-            </button>
+            <button onclick="mudarAba('users')">👥 Privado <div id="badge-privado" class="notif-ponto hidden"></div></button>
             <button onclick="mudarAba('perfil')">👤 Perfil</button>
-            <button onclick="sair()" style="color: #f44;">Sair</button>
+            <button onclick="sair()" style="color:#f44">Sair</button>
         </nav>
 
         <div id="aba-feed" class="aba">
             <textarea id="postInput" placeholder="O que há de novo?"></textarea>
-            <button onclick="postar()">Publicar</button>
-            <div id="feed-lista" style="margin-top: 20px;"></div>
+            <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold;">Publicar</button>
+            <div id="feed-lista" style="margin-top:20px;"></div>
         </div>
 
         <div id="aba-perfil" class="aba hidden">
-            <div style="background: var(--card); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid var(--border);">
-                <div class="avatar" id="perf-avatar" style="width: 70px; height: 70px; margin: 0 auto; font-size: 28px;"></div>
-                <h2 id="perf-nome" style="color: var(--main); margin: 10px 0;"></h2>
+            <div style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:1px solid var(--border);">
+                <div class="avatar" id="perf-avatar" style="width:70px; height:70px; margin:0 auto; font-size:28px;"></div>
+                <h2 id="perf-nome" style="color:var(--main); margin:10px 0;"></h2>
                 <textarea id="bioInput" placeholder="Sua biografia..."></textarea>
-                <button onclick="salvarBio()">Salvar Bio</button>
+                <button onclick="salvarBio()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold;">Salvar Bio</button>
             </div>
         </div>
 
         <div id="aba-chat-geral" class="aba hidden">
             <div id="chat-geral-lista"></div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display:flex; gap:8px;">
                 <input type="text" id="chatGeralInput" placeholder="Mensagem..." style="margin:0">
-                <button onclick="enviarGeral()" style="width: 80px;">Enviar</button>
+                <button onclick="enviarGeral()" style="width:80px; background:var(--main); border:none; border-radius:8px;">Enviar</button>
             </div>
         </div>
 
         <div id="aba-users" class="aba hidden">
             <div id="lista-usuarios"></div>
-            <div id="janela-chat" class="hidden">
-                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center;">
-                    <button onclick="fecharChat()" style="width:auto; padding: 5px 12px; background:#333; color:white; border:none; border-radius:5px;">⬅ Voltar</button>
+            <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
+                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border);">
+                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px;">⬅ Voltar</button>
                     <b id="chat-com-nome"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
-                <div style="padding: 15px; display: flex; gap: 8px; background: var(--card);">
+                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border);">
                     <input type="text" id="msgPrivadaInput" placeholder="Mensagem..." style="margin:0">
-                    <button onclick="enviarPrivado()" style="width: 60px;">➤</button>
+                    <button onclick="enviarPrivado()" style="width:60px; background:var(--main); border:none; border-radius:50%;">➤</button>
                 </div>
             </div>
         </div>
@@ -126,11 +121,12 @@
         let abaAtiva = "feed";
         let unsubChat = null;
 
-        const formataData = () => {
+        const agora = () => {
             const d = new Date();
             return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         };
 
+        // EXPOR FUNÇÕES PARA O HTML
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
@@ -151,42 +147,33 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        // --- LIKES (COM DESCURTIR) ---
+        window.excluirItem = async (caminho, id) => {
+            if(confirm("Deseja apagar para sempre?")) {
+                try {
+                    await deleteDoc(doc(db, caminho, id));
+                } catch(e) { alert("Erro ao excluir"); }
+            }
+        };
+
         window.toggleLike = async (postId) => {
-            const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
             const index = curtidos.indexOf(postId);
-            
             if(index > -1) {
-                // Já curtiu, então descurtir
                 await updateDoc(doc(db, "posts", postId), { likes: increment(-1) });
                 curtidos.splice(index, 1);
             } else {
-                // Curtir
                 await updateDoc(doc(db, "posts", postId), { likes: increment(1) });
                 curtidos.push(postId);
             }
             localStorage.setItem('curtidos', JSON.stringify(curtidos));
         };
 
-        // --- NOTIFICAÇÕES ---
-        function escutarNotificacoes() {
-            // Escuta se alguma subcoleção de chat que eu participo teve mensagem nova
-            // Para simplificar: escuta posts ou chats globais (um pouco mais complexo sem login real)
-            // Aqui vamos alertar se chegar qualquer msg privada que seja para mim
-            onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => {
-                if(!snap.empty && abaAtiva !== "users") {
-                    document.getElementById('badge-privado').classList.remove('hidden');
-                }
-            });
-        }
-
-        // --- FEED ---
-        window.postar = () => {
+        window.postar = async () => {
             const txt = document.getElementById('postInput').value;
-            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
-            const imgUrl = txt.match(imgRegex)?.[0] || null;
+            const imgMatch = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i);
+            const imgUrl = imgMatch ? imgMatch[0] : null;
             if(txt.trim()) {
-                addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0 });
+                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: agora(), likes: 0 });
                 document.getElementById('postInput').value = "";
             }
         };
@@ -198,14 +185,15 @@
                 snap.forEach(p => {
                     const d = p.data();
                     const ehCurtido = curtidos.includes(p.id);
+                    const btnDel = d.nome === meuNome ? `<button class="btn-del del-topo" onclick="excluirItem('posts', '${p.id}')">Excluir</button>` : "";
                     feed.innerHTML += `
                         <div class="post-card">
-                            ${d.nome === meuNome ? `<button class="del-btn" onclick="deleteDoc(doc(db, 'posts', '${p.id}'))" style="position:absolute; top:10px; right:10px;">X</button>` : ""}
+                            ${btnDel}
                             <div class="card-header">
                                 <div class="avatar">${d.nome[0]}</div>
                                 <div class="info"><b>${d.nome}</b><span>${d.dataStr || ""}</span></div>
                             </div>
-                            <div>${d.content}</div>
+                            <div style="font-size:15px;">${d.content}</div>
                             ${d.img ? `<img src="${d.img}" class="post-img">` : ""}
                             <div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div>
                         </div>`;
@@ -213,69 +201,84 @@
             });
         }
 
-        // --- CHAT PRIVADO ---
-        window.enviarPrivado = async () => {
-            const input = document.getElementById('msgPrivadaInput');
-            if(input.value.trim() && chatAtivoId) {
-                const chatId = [meuNome, chatAtivoId].sort().join("_");
-                const txt = input.value;
-                input.value = "";
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: formataData() });
-                // Notifica o outro
-                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+        function escutarNotificacoes() {
+            onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => {
+                if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden');
+            });
+        }
+
+        window.enviarGeral = async () => {
+            const txt = document.getElementById('chatGeralInput').value;
+            if(txt.trim()) {
+                await addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: agora() });
+                document.getElementById('chatGeralInput').value = "";
             }
         };
 
+        function ouvirChatGeral() {
+            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
+                const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
+                snap.forEach(m => {
+                    const d = m.data();
+                    const btnDel = d.nome === meuNome ? `<button class="btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>` : "";
+                    lista.innerHTML += `
+                        <div class="msg-container ${d.nome === meuNome ? 'me' : ''}">
+                            <div class="msg ${d.nome === meuNome ? 'me' : ''}">
+                                <b style="font-size:10px; color:${d.nome === meuNome ? 'black' : 'var(--main)'}">${d.nome} • ${d.dataStr || ""}</b><br>${d.texto}
+                            </div>
+                            ${btnDel}
+                        </div>`;
+                });
+                lista.scrollTop = lista.scrollHeight;
+            });
+        }
+
         window.abrirChat = (id) => {
-            chatAtivoId = id;
-            document.getElementById('janela-chat').classList.remove('hidden');
+            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden');
             document.getElementById('chat-com-nome').innerText = id;
             const chatId = [meuNome, id].sort().join("_");
+            const caminho = `chats/${chatId}/mensagens`;
             if(unsubChat) unsubChat();
-            unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
+            unsubChat = onSnapshot(query(collection(db, caminho), orderBy("data")), (snap) => {
                 const box = document.getElementById('mensagens-privadas'); box.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data();
+                    const btnDel = d.de === meuNome ? `<button class="btn-del" onclick="excluirItem('${caminho}', '${m.id}')">Apagar</button>` : "";
                     box.innerHTML += `
                         <div class="msg-container ${d.de === meuNome ? 'me' : ''}">
                             <div class="msg ${d.de === meuNome ? 'me' : ''}">${d.texto}</div>
-                            <span style="font-size:9px; color:var(--text-gray); margin-top:2px;">${d.dataStr || ""}</span>
-                            ${d.de === meuNome ? `<button class="del-btn" onclick="deleteDoc(doc(db, 'chats/${chatId}/mensagens', '${m.id}'))">Apagar</button>` : ""}
+                            <span style="font-size:9px; color:var(--text-gray); margin: 2px 5px;">${d.dataStr || ""}</span>
+                            ${btnDel}
                         </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
         };
 
-        // Funções de suporte (Geral e Perfil) mantidas como antes...
-        window.enviarGeral = () => {
-            const txt = document.getElementById('chatGeralInput').value;
-            if(txt.trim()) { addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData() }); document.getElementById('chatGeralInput').value = ""; }
+        window.enviarPrivado = async () => {
+            const input = document.getElementById('msgPrivadaInput');
+            if(input.value.trim() && chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                const txt = input.value; input.value = "";
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: agora() });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
         };
-        function ouvirChatGeral() {
-            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
-                const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
-                snap.forEach(m => {
-                    const d = m.data();
-                    lista.innerHTML += `<div style="background:#1e293b; padding:10px; border-radius:10px;"><b style="color:var(--main)">${d.nome}</b> <small style="font-size:9px">${d.dataStr || ""}</small><br>${d.texto}</div>`;
-                });
-                lista.scrollTop = lista.scrollHeight;
-            });
-        }
+
+        window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
+        window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value }); alert("Bio salva!"); };
+        async function carregarPerfil() { const d = await getDoc(doc(db, "usuarios", meuNome)); if(d.exists()) { document.getElementById('perf-nome').innerText = meuNome; document.getElementById('perf-avatar').innerText = meuNome[0]; document.getElementById('bioInput').value = d.data().bio || ""; } }
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
                         const d = u.data();
-                        lista.innerHTML += `<div class="user-card" onclick="abrirChat('${u.id}')"><div class="avatar">${u.id[0]}${d.online ? '<div class="status-dot"></div>' : ''}</div><div><b>${u.id}</b><div style="font-size:11px; color:var(--text-gray)">${d.bio || '...'}</div></div></div>`;
+                        lista.innerHTML += `<div class="user-card" style="background:var(--card); padding:12px; margin-bottom:8px; border-radius:10px; display:flex; align-items:center; gap:12px; border:1px solid var(--border);" onclick="abrirChat('${u.id}')"><div class="avatar">${u.id[0]}${d.online ? '<div class="status-dot"></div>' : ''}</div><div><b>${u.id}</b><div style="font-size:12px; color:var(--text-gray)">${d.bio || '...'}</div></div></div>`;
                     }
                 });
             });
         }
-        window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value }); alert("Salvo!"); };
-        async function carregarPerfil() { const d = await getDoc(doc(db, "usuarios", meuNome)); if(d.exists()) { document.getElementById('perf-nome').innerText = meuNome; document.getElementById('perf-avatar').innerText = meuNome[0]; document.getElementById('bioInput').value = d.data().bio || ""; } }
-        window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
     </script>
 </body>
 </html>
