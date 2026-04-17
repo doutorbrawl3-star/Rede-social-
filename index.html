@@ -6,42 +6,356 @@
     <title>SulaqueNet | Tudo em Um</title>
     
     <style>
-        :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        :root { 
+            --main: #00ff88; 
+            --bg: #0d1117; 
+            --card: #161b22; 
+            --border: #30363d; 
+            --text-secondary: #8b949e;
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            overflow-x: hidden; 
+        }
+        
         .hidden { display: none !important; }
 
-        /* Login Screen */
-        #auth-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .auth-box h1 span { color: var(--main); text-shadow: 0 0 10px var(--main); }
-        #btnGoogle { background: white; color: #333; display: flex; align-items: center; gap: 10px; padding: 15px 25px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 20px; }
-
-        /* Navigation */
-        nav { background: var(--card); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-        .nav-buttons { display: flex; gap: 10px; }
-        nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
-        #user-photo-nav { border-radius: 50%; border: 2px solid var(--main); width: 32px; height: 32px; }
-
-        /* Feed & Posts */
-        .aba { width: 100%; max-width: 600px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
-        .post-box { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        textarea { width: 100%; background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; resize: none; box-sizing: border-box; font-size: 15px; }
-        .btn-post { background: var(--main); color: black; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        /* --- Tela de Login --- */
+        #auth-screen { 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            padding: 20px;
+            box-sizing: border-box;
+        }
         
-        .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .post-header img { border-radius: 50%; width: 35px; height: 35px; }
-        .post-header b { font-size: 14px; color: var(--main); }
+        .auth-box h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
 
-        /* People & Chat */
-        .user-card { background: var(--card); padding: 15px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); }
-        #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
-        .chat-header { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
-        #mensagens-privadas { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 14px; border-radius: 15px; background: #30363d; max-width: 80%; font-size: 15px; line-height: 1.4; }
-        .me { align-self: flex-end; background: var(--main); color: black; font-weight: 500; }
-        .chat-input-area { padding: 15px; background: var(--card); display: flex; gap: 10px; border-top: 1px solid var(--border); }
-        .chat-input-area input { flex: 1; background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 20px; }
-        .btn-send { background: var(--main); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .auth-box h1 span { 
+            color: var(--main); 
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); 
+        }
+
+        .auth-box p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        #btnGoogle { 
+            background: white; 
+            color: #333; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 15px 25px; 
+            border-radius: 30px; 
+            border: none; 
+            font-weight: bold; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #btnGoogle:hover {
+            background: #f1f1f1;
+        }
+
+        /* --- Navegação --- */
+        nav { 
+            background: var(--card); 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border); 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        
+        .nav-buttons { display: flex; gap: 10px; }
+        
+        nav button { 
+            background: transparent; 
+            border: 1px solid var(--border); 
+            color: white; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        nav button:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-profile { display: flex; align-items: center; gap: 10px; }
+        
+        #user-photo-nav { 
+            border-radius: 50%; 
+            border: 2px solid var(--main); 
+            width: 36px; 
+            height: 36px; 
+            object-fit: cover;
+        }
+
+        .btn-sair {
+            border-color: #f44 !important;
+            color: #f44 !important;
+            font-size: 14px !important;
+            font-weight: bold;
+        }
+
+        .btn-sair:hover {
+            background: rgba(255, 68, 68, 0.1) !important;
+        }
+
+        /* --- Área de Conteúdo (Abas) --- */
+        .aba { 
+            width: 100%; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px 15px; 
+            box-sizing: border-box; 
+        }
+        
+        .aba h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        /* --- Feed e Postagem --- */
+        .post-box { 
+            background: var(--card); 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 25px; 
+        }
+        
+        textarea { 
+            width: 100%; 
+            background: rgba(0, 0, 0, 0.2); 
+            color: white; 
+            border: 1px solid var(--border); 
+            padding: 12px; 
+            border-radius: 8px; 
+            resize: none; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--main);
+        }
+
+        .btn-post { 
+            background: var(--main); 
+            color: black; 
+            border: none; 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            cursor: pointer; 
+            font-size: 15px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-post:hover {
+            opacity: 0.9;
+        }
+        
+        /* Cards de Post no Feed */
+        .post-card { 
+            background: var(--card); 
+            padding: 18px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 15px; 
+        }
+        
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        
+        .post-header img { 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            object-fit: cover;
+        }
+        
+        .post-header b { 
+            font-size: 15px; 
+            color: var(--main); 
+        }
+
+        .post-content { 
+            margin: 0; 
+            line-height: 1.5; 
+            font-size: 15px;
+            color: #e6edf3;
+        }
+
+        /* --- Pessoas e Lista de Usuários --- */
+        .user-card { 
+            background: var(--card); 
+            padding: 18px; 
+            margin-bottom: 12px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            border: 1px solid var(--border); 
+            transition: border-color 0.2s, background 0.2s;
+        }
+        
+        .user-card:hover { 
+            border-color: var(--main); 
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .user-card img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+        }
+
+        .user-card span {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* --- Janela de Chat Privado --- */
+        #janela-chat { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg); 
+            z-index: 100; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .chat-header { 
+            padding: 15px; 
+            background: var(--card); 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        .btn-back {
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 24px; 
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        #chat-com-nome { 
+            font-weight: bold; 
+            font-size: 1.1rem;
+        }
+        
+        #mensagens-privadas { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        
+        /* Balões de Mensagem */
+        .msg { 
+            padding: 11px 16px; 
+            border-radius: 18px; 
+            background: #30363d; 
+            width: fit-content; 
+            max-width: 75%; 
+            font-size: 15px; 
+            line-height: 1.4; 
+            word-wrap: break-word;
+        }
+        
+        .me { 
+            align-self: flex-end; 
+            background: var(--main); 
+            color: black; 
+            font-weight: 500; 
+            border-bottom-right-radius: 4px;
+        }
+
+        .other {
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* Área de Input do Chat */
+        .chat-input-area { 
+            padding: 15px; 
+            background: var(--card); 
+            display: flex; 
+            gap: 10px; 
+            border-top: 1px solid var(--border); 
+            align-items: center;
+        }
+        
+        .chat-input-area input { 
+            flex: 1; 
+            background: rgba(0, 0, 0, 0.2); 
+            color: white; 
+            border: 1px solid var(--border); 
+            padding: 12px 18px; 
+            border-radius: 25px; 
+            font-size: 15px;
+        }
+        
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--main);
+        }
+
+        .btn-send { 
+            background: var(--main); 
+            border: none; 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            font-size: 18px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+            padding: 0;
+            padding-left: 3px; /* Ajuste óptico para o ícone */
+        }
+
+        .btn-send:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -49,9 +363,9 @@
     <div id="auth-screen">
         <div class="auth-box">
             <h1>SULAQUE<span>NET</span></h1>
-            <p>A tua rede social completa</p>
+            <p>A tua rede social completa, agora com login Google.</p>
             <button id="btnGoogle" onclick="fazerLoginGoogle()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="20">
                 Entrar com o Google
             </button>
         </div>
@@ -60,35 +374,38 @@
     <div id="app-screen" class="hidden">
         <nav>
             <div class="nav-buttons">
-                <button onclick="mudarAba('feed')">🏠</button>
-                <button onclick="mudarAba('users')">👥</button>
+                <button onclick="mudarAba('feed')" title="Feed Geral">🏠</button>
+                <button onclick="mudarAba('users')" title="Mensagens Privadas">👥</button>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img id="user-photo-nav" src="">
-                <button onclick="deslogar()" style="border-color: #f44;">Sair</button>
+            <div class="nav-profile">
+                <img id="user-photo-nav" src="" alt="Sua Foto">
+                <button onclick="deslogar()" class="btn-sair">Sair</button>
             </div>
         </nav>
 
         <div id="aba-feed" class="aba">
             <div class="post-box">
-                <textarea id="postInput" placeholder="Partilha algo novo..."></textarea>
+                <textarea id="postInput" rows="3" placeholder="Partilha algo novo com o mundo..."></textarea>
                 <button class="btn-post" onclick="postar()">Publicar no Feed</button>
             </div>
-            <div id="feed-lista"></div>
+            <div id="feed-lista">
+                </div>
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <h3 style="margin-bottom: 20px;">Conversas Privadas</h3>
-            <div id="lista-usuarios"></div>
+            <h3>Conversas Privadas</h3>
+            <div id="lista-usuarios">
+                </div>
             
             <div id="janela-chat" class="hidden">
                 <div class="chat-header">
-                    <button onclick="fecharChat()" style="background: none; border: none; color: white; font-size: 20px;">⬅</button>
-                    <span id="chat-com-nome" style="font-weight: bold;"></span>
+                    <button onclick="fecharChat()" class="btn-back" title="Voltar">⬅</button>
+                    <span id="chat-com-nome"></span>
                 </div>
-                <div id="mensagens-privadas"></div>
+                <div id="mensagens-privadas">
+                    </div>
                 <div class="chat-input-area">
-                    <input type="text" id="msgPrivadaInput" placeholder="Escreve aqui...">
+                    <input type="text" id="msgPrivadaInput" placeholder="Escreve a tua mensagem...">
                     <button class="btn-send" onclick="enviarPrivado()">➤</button>
                 </div>
             </div>
@@ -100,138 +417,271 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO TEU FIREBASE
+        // --- INSERE AQUI A TUA CONFIGURAÇÃO DO FIREBASE ---
+        // Podes copiar diretamente do teu console Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
-            authDomain: "rede-social-8f031.firebaseapp.com",
-            databaseURL: "https://rede-social-8f031-default-rtdb.firebaseio.com",
-            projectId: "rede-social-8f031",
-            storageBucket: "rede-social-8f031.firebasestorage.app",
-            messagingSenderId: "439234666870",
-            appId: "1:439234666870:web:b8dde1bdd07a247b61da57"
+            apiKey: "AIzaSyB...",
+            authDomain: "seu-projeto.firebaseapp.com",
+            projectId: "seu-projeto",
+            storageBucket: "seu-projeto.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
         };
 
+        // Inicializar Firebase e Serviços
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
+        // Variáveis de estado
         let usuarioLogado = null;
         let chatAtivoId = null;
-        let unsubChat = null;
+        let unsubChatSnapshot = null; // Para cancelar a escuta do chat anterior
 
-        // LOGIN GOOGLE
+        // --- AUTENTICAÇÃO (LOGIN/LOGOUT) ---
+
+        // Função global para o botão de login
         window.fazerLoginGoogle = () => {
+            // Define o idioma do popup para Português
+            auth.languageCode = 'pt';
+            
             signInWithPopup(auth, provider)
                 .then((result) => {
+                    // Login bem-sucedido. O observer onAuthStateChanged cuidará do resto.
                     const user = result.user;
+                    console.log("Logado como:", user.displayName);
+                    
+                    // Salva ou atualiza os dados básicos do usuário no Firestore
+                    // para que outros usuários possam encontrá-lo na lista de contatos.
                     setDoc(doc(db, "usuarios", user.uid), { 
                         nome: user.displayName, 
                         foto: user.photoURL, 
-                        uid: user.uid 
-                    });
-                }).catch(e => alert("Erro ao entrar: " + e.message));
+                        email: user.email,
+                        uid: user.uid,
+                        ultimaVez: Date.now()
+                    }, { merge: true }); // Merge garante que não sobrescreva campos extras no futuro
+
+                }).catch((error) => {
+                    console.error("Erro no login popup:", error);
+                    alert("Erro ao entrar com o Google: " + error.message);
+                });
         };
 
-        window.deslogar = () => signOut(auth);
+        // Função global para o botão Sair
+        window.deslogar = () => {
+            if(confirm("Tens a certeza que queres sair?")) {
+                fecharChat(); // Garante que fecha escutas de chat ativo
+                signOut(auth).catch(e => console.error("Erro ao sair:", e));
+            }
+        };
 
+        // Observador do estado de autenticação (Roda sempre que o status muda)
         onAuthStateChanged(auth, (user) => {
             usuarioLogado = user;
-            document.getElementById('auth-screen').classList.toggle('hidden', !!user);
-            document.getElementById('app-screen').classList.toggle('hidden', !user);
-            if(user) {
-                document.getElementById('user-photo-nav').src = user.photoURL;
-                carregarUsuarios();
+            
+            if (user) {
+                // Usuário está logado
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                
+                // Atualiza foto na nav
+                document.getElementById('user-photo-nav').src = user.photoURL || 'https://via.placeholder.com/150'; // Fallback se não houver foto
+                
+                // Carrega dados iniciais
+                carregarUsuariosParaLista();
+                iniciarEscutaFeedGeral();
+                
+            } else {
+                // Usuário não está logado
+                document.getElementById('app-screen').classList.add('hidden');
+                document.getElementById('auth-screen').classList.remove('hidden');
+                
+                // Limpa dados da interface
+                document.getElementById('feed-lista').innerHTML = "";
+                document.getElementById('lista-usuarios').innerHTML = "";
             }
         });
 
-        // NAVEGAÇÃO
-        window.mudarAba = (aba) => {
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
+        // --- NAVEGAÇÃO ENTRE ABAS ---
+        window.mudarAba = (abaNome) => {
+            // Oculta todas as abas
+            document.querySelectorAll('.aba').forEach(aba => aba.classList.add('hidden'));
+            // Mostra a aba clicada
+            document.getElementById('aba-' + abaNome).classList.remove('hidden');
         };
 
-        // CARREGAR LISTA DE UTILIZADORES
-        async function carregarUsuarios() {
-            const snap = await getDocs(collection(db, "usuarios"));
-            const lista = document.getElementById('lista-usuarios');
-            lista.innerHTML = "";
-            snap.forEach(u => {
-                if(u.id !== usuarioLogado.uid) {
-                    const card = document.createElement('div');
-                    card.className = "user-card";
-                    card.innerHTML = `<img src="${u.data().foto}" width="35" style="border-radius:50%"> <span>${u.data().nome}</span>`;
-                    card.onclick = () => abrirChat(u.id, u.data().nome);
-                    lista.appendChild(card);
+        // --- LISTA DE PESSOAS (CONTATOS) ---
+        async function carregarUsuariosParaLista() {
+            const listaDiv = document.getElementById('lista-usuarios');
+            listaDiv.innerHTML = "<p style='color:var(--text-secondary); padding:0 10px;'>A carregar utilizadores...</p>";
+
+            try {
+                // Busca todos os documentos na coleção "usuarios"
+                const querySnapshot = await getDocs(collection(db, "usuarios"));
+                listaDiv.innerHTML = ""; // Limpa texto de carregando
+
+                let temOutrosUsuarios = false;
+
+                querySnapshot.forEach((docSnap) => {
+                    const dadosUsuario = docSnap.data();
+                    
+                    // Não mostra o próprio usuário logado na lista
+                    if(dadosUsuario.uid !== usuarioLogado.uid) {
+                        temOutrosUsuarios = true;
+                        
+                        const card = document.createElement('div');
+                        card.className = "user-card";
+                        
+                        const fotoUrl = dadosUsuario.foto || 'https://via.placeholder.com/150';
+                        
+                        card.innerHTML = `
+                            <img src="${fotoUrl}" alt="${dadosUsuario.nome}"> 
+                            <span>${dadosUsuario.nome}</span>
+                        `;
+                        
+                        // Ao clicar, abre o chat com este usuário
+                        card.onclick = () => abrirJanelaChatPrivado(dadosUsuario.uid, dadosUsuario.nome);
+                        listaDiv.appendChild(card);
+                    }
+                });
+
+                if(!temOutrosUsuarios) {
+                    listaDiv.innerHTML = "<p style='color:var(--text-secondary); padding:0 10px;'>Ainda não há outros utilizadores registados.</p>";
                 }
+
+            } catch (error) {
+                console.error("Erro ao carregar utilizadores:", error);
+                listaDiv.innerHTML = "<p style='color:#f44; padding:0 10px;'>Erro ao carregar lista.</p>";
+            }
+        }
+
+        // --- CHAT PRIVADO ---
+
+        // Abre a janela de sobreposição do chat e inicia a escuta de mensagens em tempo real
+        window.abrirJanelaChatPrivado = (outroUsuarioUid, outroUsuarioNome) => {
+            chatAtivoId = outroUsuarioUid;
+            
+            // UI: Mostra janela e define nome no cabeçalho
+            document.getElementById('janela-chat').classList.remove('hidden');
+            document.getElementById('chat-com-nome').innerText = outroUsuarioNome;
+            document.getElementById('msgPrivadaInput').focus();
+            
+            // Gera um ID único e consistente para a conversa entre os dois usuários.
+            // Ordenamos os UIDs alfabeticamente para que userA_userB seja igual a userB_userA.
+            const chatIdUnico = [usuarioLogado.uid, outroUsuarioUid].sort().join("_");
+            
+            // UI: Limpa mensagens antigas visualmente enquanto carrega as novas
+            const containerMensagens = document.getElementById('mensagens-privadas');
+            containerMensagens.innerHTML = "<p style='color:var(--text-secondary); text-align:center;'>A carregar chat...</p>";
+
+            // Cancela escuta ativa de chat anterior, se houver
+            if(unsubChatSnapshot) unsubChatSnapshot();
+
+            // Referência para a sub-coleção de mensagens dentro do documento deste chat específico
+            const mensagensRef = collection(db, "chats", chatIdUnico, "mensagens");
+            // Query para ordenar mensagens por data
+            const qMensagens = query(mensagensRef, orderBy("data"));
+
+            // Inicia escuta em tempo real (onSnapshot)
+            unsubChatSnapshot = onSnapshot(qMensagens, (snapshot) => {
+                containerMensagens.innerHTML = ""; // Limpa container
+
+                if(snapshot.empty) {
+                     containerMensagens.innerHTML = "<p style='color:var(--text-secon                snapshot.forEach((docM) => {
+                    const msgDados = docM.data();
+                    const divMsg = document.createElement('div');
+                    
+                    // Define classe CSS baseada em quem enviou
+                    const ehMinha = msgDados.de === usuarioLogado.uid;
+                    divMsg.className = `msg ${ehMinha ? 'me' : 'other'}`;
+                    divMsg.innerText = msgDados.texto;
+                    
+                    containerMensagens.appendChild(divMsg);
+                });
+                
+                // Rola automaticamente para o fim do chat
+                containerMensagens.scrollTop = containerMensagens.scrollHeight;
+            }, (error) => {
+                console.error("Erro na escuta do chat:", error);
+            });
+        };
+
+        // FECHAR JANELA DE CHAT
+        window.fecharChat = () => {
+            document.getElementById('janela-chat').classList.add('hidden');
+            chatAtivoId = null;
+            if(unsubChatSnapshot) {
+                unsubChatSnapshot();
+                unsubChatSnapshot = null;
+            }
+        };
+
+        // ENVIAR MENSAGEM PRIVADA
+        window.enviarPrivado = async () => {
+            const input = document.getElementById('msgPrivadaInput');
+            const textoMensagem = input.value.trim();
+            
+            if(!textoMensagem || !chatAtivoId) return;
+
+            const chatIdUnico = [usuarioLogado.uid, chatAtivoId].sort().join("_");
+            input.value = "";
+
+            try {
+                await addDoc(collection(db, "chats", chatIdUnico, "mensagens"), {
+                    de: usuarioLogado.uid,
+                    para: chatAtivoId,
+                    texto: textoMensagem,
+                    data: Date.now()
+                });
+            } catch (error) {
+                console.error("Erro ao enviar:", error);
+            }
+        };
+
+        // ESCUTA DO FEED GERAL
+        function iniciarEscutaFeedGeral() {
+            const feedContainer = document.getElementById('feed-lista');
+            const qFeed = query(collection(db, "posts"), orderBy("data", "desc"));
+
+            onSnapshot(qFeed, (snapshot) => {
+                feedContainer.innerHTML = "";
+                snapshot.forEach((docP) => {
+                    const post = docP.data();
+                    const card = document.createElement('div');
+                    card.className = "post-card";
+                    card.innerHTML = `
+                        <div class="post-header">
+                            <img src="${post.foto || ''}"> 
+                            <b>${post.nome}</b>
+                        </div>
+                        <p class="post-content">${post.content}</p>
+                    `;
+                    feedContainer.appendChild(card);
+                });
             });
         }
 
-        // CHAT PRIVADO
-        window.abrirChat = (id, nome) => {
-            chatAtivoId = id;
-            document.getElementById('janela-chat').classList.remove('hidden');
-            document.getElementById('chat-com-nome').innerText = nome;
-            const chatId = [usuarioLogado.uid, id].sort().join("_");
-            const q = query(collection(db, "chats", chatId, "mensagens"), orderBy("data"));
-            
-            if(unsubChat) unsubChat();
-            unsubChat = onSnapshot(q, (snap) => {
-                const box = document.getElementById('mensagens-privadas');
-                box.innerHTML = "";
-                snap.forEach(m => {
-                    const d = m.data();
-                    box.innerHTML += `<div class="msg ${d.de === usuarioLogado.uid ? 'me' : ''}">${d.texto}</div>`;
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        };
+        // PUBLICAR NO FEED
+        window.postar = async () => {
+            const textarea = document.getElementById('postInput');
+            const conteudo = textarea.value.trim();
+            if(!conteudo) return;
 
-        window.enviarPrivado = async () => {
-            const input = document.getElementById('msgPrivadaInput');
-            if(input.value.trim() && chatAtivoId) {
-                const chatId = [usuarioLogado.uid, chatAtivoId].sort().join("_");
-                await addDoc(collection(db, "chats", chatId, "mensagens"), {
-                    de: usuarioLogado.uid,
-                    texto: input.value,
-                    data: Date.now()
-                });
-                input.value = "";
-            }
-        };
-
-        window.fecharChat = () => {
-            document.getElementById('janela-chat').classList.add('hidden');
-            if(unsubChat) unsubChat();
-        };
-
-        // FEED DE POSTS
-        window.postar = () => {
-            const txt = document.getElementById('postInput').value;
-            if(txt.trim()) {
-                addDoc(collection(db, "posts"), { 
+            try {
+                await addDoc(collection(db, "posts"), { 
+                    userUid: usuarioLogado.uid,
                     nome: usuarioLogado.displayName, 
                     foto: usuarioLogado.photoURL, 
-                    content: txt, 
+                    content: conteudo, 
                     data: Date.now() 
                 });
-                document.getElementById('postInput').value = "";
+                textarea.value = "";
+            } catch (error) {
+                alert("Erro ao postar.");
             }
         };
 
-        onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
-            const feed = document.getElementById('feed-lista');
-            feed.innerHTML = "";
-            snap.forEach(p => {
-                const d = p.data();
-                feed.innerHTML += `
-                    <div class="post-card">
-                        <div class="post-header"><img src="${d.foto}"> <b>${d.nome}</b></div>
-                        <p style="margin: 0; line-height: 1.4;">${d.content}</p>
-                    </div>`;
-            });
-        });
     </script>
 </body>
-                  </html>
-  
+</html>
