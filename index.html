@@ -418,6 +418,22 @@
 
         window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
         function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
+
+// REGISTRAR SERVICE WORKER PARA INSTALAÇÃO
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+    .then(() => console.log("Service Worker Registrado!"));
+}
+
+// LOGICA PARA O BOTAO DE INSTALAR (OPCIONAL)
+let instalador;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    instalador = e;
+});
+
+// Você pode chamar instalador.prompt() em um botão se quiser
+
     </script>
 </body>
 </html>
