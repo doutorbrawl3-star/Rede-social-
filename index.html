@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SulaqueNet | Simples</title>
+    <title>StackNet | Social</title>
     <style>
         :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
@@ -11,8 +11,9 @@
 
         /* Tela de Entrada */
         #auth-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); text-align: center; width: 300px; }
+        h1 span { color: var(--main); }
+        input, textarea { background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         button { background: var(--main); color: black; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
 
         /* Nav */
@@ -24,51 +25,61 @@
         .post-card { background: var(--card); padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
         .post-card b { color: var(--main); }
 
-        .user-card { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); }
+        .user-card { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         
+        /* Janela de Chat Privado */
         #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
+        .chat-header { padding: 15px; background: var(--card); display: flex; gap: 15px; align-items: center; border-bottom: 1px solid var(--border); }
+        .btn-voltar { background: #30363d; color: white; width: auto; padding: 8px 15px; font-size: 14px; }
+        
         #mensagens-privadas { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .msg { padding: 10px; border-radius: 10px; background: #30363d; max-width: 80%; }
+        .msg { padding: 10px; border-radius: 10px; background: #30363d; max-width: 80%; word-wrap: break-word; }
         .me { align-self: flex-end; background: var(--main); color: black; }
-        .chat-input-area { padding: 15px; background: var(--card); display: flex; gap: 5px; }
+        
+        .chat-input-area { padding: 15px; background: var(--card); display: flex; gap: 10px; border-top: 1px solid var(--border); }
+        .chat-input-area input { margin-bottom: 0; }
+        .btn-enviar { width: 60px; }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
         <div class="auth-box">
-            <h1>Stack<span>Net</span></h1>
-            <input type="text" id="nome-usuario" placeholder="Teu nome ou apelido...">
-            <button onclick="entrar()">Entrar no App</button>
+            <h1>STACK<span>NET</span></h1>
+            <p>Digite seu nome para entrar</p>
+            <input type="text" id="nome-usuario" placeholder="Ex: Isaque">
+            <button onclick="entrar()">Entrar</button>
         </div>
     </div>
 
     <div id="app-screen" class="hidden">
         <nav>
-            <button onclick="mudarAba('feed')"> Feed</button>
-            <button onclick="mudarAba('users')"> Chat</button>
-            <button onclick="location.reload()" style="color: #f44;">Sair</button>
+            <button onclick="mudarAba('feed')">🏠 Feed</button>
+            <button onclick="mudarAba('users')">👥 Chat</button>
+            <button onclick="location.reload()" style="border-color: #f44; color: #f44;">Sair</button>
         </nav>
 
         <div id="aba-feed" class="aba">
-            <textarea id="postInput" placeholder="Oque está acontecendo?"></textarea>
-            <button onclick="postar()">Postar</button>
-            <div id="feed-lista" style="margin-top: 20px;"></div>
+            <div class="post-box" style="margin-bottom: 20px;">
+                <textarea id="postInput" placeholder="O que está acontecendo?"></textarea>
+                <button onclick="postar()">Publicar Post</button>
+            </div>
+            <div id="feed-lista"></div>
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <h3>Pessoas Online</h3>
+            <h3 style="margin-bottom: 15px;">Conversas Privadas</h3>
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden">
-                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center;">
-                    <button onclick="fecharChat()" style="width:40px;">⬅</button>
+                <div class="chat-header">
+                    <button class="btn-voltar" onclick="fecharChat()">⬅ Voltar para Feed</button>
                     <b id="chat-com-nome"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
                 <div class="chat-input-area">
                     <input type="text" id="msgPrivadaInput" placeholder="Mensagem...">
-                    <button onclick="enviarPrivado()" style="width:60px;">➤</button>
+                    <button class="btn-enviar" onclick="enviarPrivado()">➤</button>
                 </div>
             </div>
         </div>
@@ -76,7 +87,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -103,9 +114,8 @@
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 
-                // Salva o nome no banco para outros verem
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome });
-                carregarUsuarios();
+                ouvirUsuarios();
                 ouvirFeed();
             }
         };
@@ -115,8 +125,8 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        // --- LISTA DE USUÁRIOS ---
-        async function carregarUsuarios() {
+        // --- OUVIR USUÁRIOS ---
+        function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios');
                 lista.innerHTML = "";
@@ -124,7 +134,7 @@
                     if(u.id !== meuNome) {
                         const d = document.createElement('div');
                         d.className = "user-card";
-                        d.innerText = "👤 " + u.data().nome;
+                        d.innerHTML = `<span>👤</span> <b>${u.data().nome}</b>`;
                         d.onclick = () => abrirChat(u.id);
                         lista.appendChild(d);
                     }
@@ -136,7 +146,7 @@
         window.abrirChat = (id) => {
             chatAtivoId = id;
             document.getElementById('janela-chat').classList.remove('hidden');
-            document.getElementById('chat-com-nome').innerText = id;
+            document.getElementById('chat-com-nome').innerText = "Chat com " + id;
             const chatId = [meuNome, id].sort().join("_");
             
             if(unsubChat) unsubChat();
@@ -160,7 +170,10 @@
             }
         };
 
-        window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
+        window.fecharChat = () => {
+            document.getElementById('janela-chat').classList.add('hidden');
+            if(unsubChat) unsubChat();
+        };
 
         // --- FEED ---
         window.postar = async () => {
@@ -177,7 +190,7 @@
                 feed.innerHTML = "";
                 snap.forEach(p => {
                     const d = p.data();
-                    feed.innerHTML += `<div class="post-card"><b>${d.nome}:</b><br>${d.content}</div>`;
+                    feed.innerHTML += `<div class="post-card"><b>${d.nome}</b><p style="margin:5px 0 0;">${d.content}</p></div>`;
                 });
             });
         }
