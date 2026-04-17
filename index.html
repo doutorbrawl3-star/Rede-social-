@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SulaqueNet | Tudo em Um</title>
+    
+    <style>
+        :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        .hidden { display: none !important; }
+
+        /* Login Screen */
+        #auth-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .auth-box h1 span { color: var(--main); text-shadow: 0 0 10px var(--main); }
+        #btnGoogle { background: white; color: #333; display: flex; align-items: center; gap: 10px; padding: 15px 25px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 20px; }
+
+        /* Navigation */
+        nav { background: var(--card); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .nav-buttons { display: flex; gap: 10px; }
+        nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        #user-photo-nav { border-radius: 50%; border: 2px solid var(--main); width: 32px; height: 32px; }
+
+        /* Feed & Posts */
+        .aba { width: 100%; max-width: 600px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
+        .post-box { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        textarea { width: 100%; background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; resize: none; box-sizing: border-box; font-size: 15px; }
+        .btn-post { background: var(--main); color: black; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        
+        .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .post-header img { border-radius: 50%; width: 35px; height: 35px; }
+        .post-header b { font-size: 14px; color: var(--main); }
+
+        /* People & Chat */
+        .user-card { background: var(--card); padding: 15px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); }
+        #janela-chat { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; }
+        .chat-header { padding: 15px; background: var(--card); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border); }
+        #mensagens-privadas { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 15px; background: #30363d; max-width: 80%; font-size: 15px; line-height: 1.4; }
+        .me { align-self: flex-end; background: var(--main); color: black; font-weight: 500; }
+        .chat-input-area { padding: 15px; background: var(--card); display: flex; gap: 10px; border-top: 1px solid var(--border); }
+        .chat-input-area input { flex: 1; background: #000; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 20px; }
+        .btn-send { background: var(--main); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h1>SULAQUE<span>NET</span></h1>
+            <p>A tua rede social completa</p>
+            <button id="btnGoogle" onclick="fazerLoginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+                Entrar com o Google
+            </button>
+        </div>
+    </div>
+
+    <div id="app-screen" class="hidden">
+        <nav>
+            <div class="nav-buttons">
+                <button onclick="mudarAba('feed')">🏠</button>
+                <button onclick="mudarAba('users')">👥</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="user-photo-nav" src="">
+                <button onclick="deslogar()" style="border-color: #f44;">Sair</button>
+            </div>
+        </nav>
+
+        <div id="aba-feed" class="aba">
+            <div class="post-box">
+                <textarea id="postInput" placeholder="Partilha algo novo..."></textarea>
+                <button class="btn-post" onclick="postar()">Publicar no Feed</button>
+            </div>
+            <div id="feed-lista"></div>
+        </div>
+
+        <div id="aba-users" class="aba hidden">
+            <h3 style="margin-bottom: 20px;">Conversas Privadas</h3>
+            <div id="lista-usuarios"></div>
+            
+            <div id="janela-chat" class="hidden">
+                <div class="chat-header">
+                    <button onclick="fecharChat()" style="background: none; border: none; color: white; font-size: 20px;">⬅</button>
+                    <span id="chat-com-nome" style="font-weight: bold;"></span>
+                </div>
+                <div id="mensagens-privadas"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="msgPrivadaInput" placeholder="Escreve aqui...">
+                    <button class="btn-send" onclick="enviarPrivado()">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO TEU FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
+            authDomain: "rede-social-8f031.firebaseapp.com",
+            databaseURL: "https://rede-social-8f031-default-rtdb.firebaseio.com",
+            projectId: "rede-social-8f031",
+            storageBucket: "rede-social-8f031.firebasestorage.app",
+            messagingSenderId: "439234666870",
+            appId: "1:439234666870:web:b8dde1bdd07a247b61da57"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let usuarioLogado = null;
+        let chatAtivoId = null;
+        let unsubChat = null;
+
+        // LOGIN GOOGLE
+        window.fazerLoginGoogle = () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    setDoc(doc(db, "usuarios", user.uid), { 
+                        nome: user.displayName, 
+                        foto: user.photoURL, 
+                        uid: user.uid 
+                    });
+                }).catch(e => alert("Erro ao entrar: " + e.message));
+        };
+
+        window.deslogar = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            usuarioLogado = user;
+            document.getElementById('auth-screen').classList.toggle('hidden', !!user);
+            document.getElementById('app-screen').classList.toggle('hidden', !user);
+            if(user) {
+                document.getElementById('user-photo-nav').src = user.photoURL;
+                carregarUsuarios();
+            }
+        });
+
+        // NAVEGAÇÃO
+        window.mudarAba = (aba) => {
+            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
+            document.getElementById('aba-' + aba).classList.remove('hidden');
+        };
+
+        // CARREGAR LISTA DE UTILIZADORES
+        async function carregarUsuarios() {
+            const snap = await getDocs(collection(db, "usuarios"));
+            const lista = document.getElementById('lista-usuarios');
+            lista.innerHTML = "";
+            snap.forEach(u => {
+                if(u.id !== usuarioLogado.uid) {
+                    const card = document.createElement('div');
+                    card.className = "user-card";
+                    card.innerHTML = `<img src="${u.data().foto}" width="35" style="border-radius:50%"> <span>${u.data().nome}</span>`;
+                    card.onclick = () => abrirChat(u.id, u.data().nome);
+                    lista.appendChild(card);
+                }
+            });
+        }
+
+        // CHAT PRIVADO
+        window.abrirChat = (id, nome) => {
+            chatAtivoId = id;
+            document.getElementById('janela-chat').classList.remove('hidden');
+            document.getElementById('chat-com-nome').innerText = nome;
+            const chatId = [usuarioLogado.uid, id].sort().join("_");
+            const q = query(collection(db, "chats", chatId, "mensagens"), orderBy("data"));
+            
+            if(unsubChat) unsubChat();
+            unsubChat = onSnapshot(q, (snap) => {
+                const box = document.getElementById('mensagens-privadas');
+                box.innerHTML = "";
+                snap.forEach(m => {
+                    const d = m.data();
+                    box.innerHTML += `<div class="msg ${d.de === usuarioLogado.uid ? 'me' : ''}">${d.texto}</div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        };
+
+        window.enviarPrivado = async () => {
+            const input = document.getElementById('msgPrivadaInput');
+            if(input.value.trim() && chatAtivoId) {
+                const chatId = [usuarioLogado.uid, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, "chats", chatId, "mensagens"), {
+                    de: usuarioLogado.uid,
+                    texto: input.value,
+                    data: Date.now()
+                });
+                input.value = "";
+            }
+        };
+
+        window.fecharChat = () => {
+            document.getElementById('janela-chat').classList.add('hidden');
+            if(unsubChat) unsubChat();
+        };
+
+        // FEED DE POSTS
+        window.postar = () => {
+            const txt = document.getElementById('postInput').value;
+            if(txt.trim()) {
+                addDoc(collection(db, "posts"), { 
+                    nome: usuarioLogado.displayName, 
+                    foto: usuarioLogado.photoURL, 
+                    content: txt, 
+                    data: Date.now() 
+                });
+                document.getElementById('postInput').value = "";
+            }
+        };
+
+        onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
+            const feed = document.getElementById('feed-lista');
+            feed.innerHTML = "";
+            snap.forEach(p => {
+                const d = p.data();
+                feed.innerHTML += `
+                    <div class="post-card">
+                        <div class="post-header"><img src="${d.foto}"> <b>${d.nome}</b></div>
+                        <p style="margin: 0; line-height: 1.4;">${d.content}</p>
+                    </div>`;
+            });
+        });
+    </script>
+</body>
+                  </html>
+  
