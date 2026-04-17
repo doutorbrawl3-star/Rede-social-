@@ -25,12 +25,12 @@
         /* Feed & Stories */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
         
-        /* Novo: CSS dos Stories */
+        /* CSS dos Stories */
         .stories-wrapper { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
         .story-circle { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--main); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: black; flex-shrink: 0; cursor: pointer; background: #333; }
         .story-add { border: 2px dashed var(--text-gray); background: transparent; color: var(--text-gray); }
         
-        /* Novo: Modal de Visualizar Story */
+        /* Modal de Visualizar Story */
         #story-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
@@ -172,7 +172,8 @@
         </div>
 
         <div id="story-viewer" class="hidden">
-            <div style="width: 100%; display: flex; justify-content: flex-end; padding: 20px; position: absolute; top: 0;">
+            <div style="width: 100%; display: flex; justify-content: space-between; padding: 20px; position: absolute; top: 0; box-sizing: border-box;">
+                <button id="btn-del-story" class="hidden" style="background:none; border:none; color:#ff4444; font-size:24px; cursor:pointer; font-weight:bold;">🗑️</button>
                 <button onclick="fecharStory()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer; font-weight:bold;">✖</button>
             </div>
             <div class="avatar" id="sv-avatar" style="width:80px; height:80px; font-size:35px; margin-bottom:20px;"></div>
@@ -225,22 +226,42 @@
                 snap.forEach(s => {
                     const d = s.data();
                     const safeText = (d.texto || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    lista.innerHTML += `<div class="story-circle" style="background:${d.cor || '#333'}" onclick="verStory('${d.nome}', '${d.cor}', '${safeText}', '${d.dataStr}')">${d.nome[0]}</div>`;
+                    // Adicionado: Agora passo o s.id (ID do documento) para o verStory
+                    lista.innerHTML += `<div class="story-circle" style="background:${d.cor || '#333'}" onclick="verStory('${s.id}', '${d.nome}', '${d.cor}', '${safeText}', '${d.dataStr}')">${d.nome[0]}</div>`;
                 });
             });
         }
 
-        window.verStory = (nome, cor, texto, dataStr) => {
+        // Adicionado: Agora a função recebe o ID do story
+        window.verStory = (id, nome, cor, texto, dataStr) => {
             document.getElementById('sv-avatar').innerText = nome[0];
             document.getElementById('sv-avatar').style.background = cor;
             document.getElementById('sv-nome').innerText = nome;
             document.getElementById('sv-texto').innerText = texto;
             document.getElementById('sv-data').innerText = dataStr;
+            
+            // Adicionado: Lógica do botão de apagar
+            const btnDel = document.getElementById('btn-del-story');
+            if (nome === meuNome) {
+                btnDel.classList.remove('hidden');
+                btnDel.onclick = () => excluirStory(id); // Atribui a função de deletar
+            } else {
+                btnDel.classList.add('hidden'); // Esconde a lixeira se for story dos outros
+            }
+
             document.getElementById('story-viewer').classList.remove('hidden');
         };
 
         window.fecharStory = () => {
             document.getElementById('story-viewer').classList.add('hidden');
+        };
+
+        // Adicionado: Função para apagar o Story
+        window.excluirStory = async (id) => {
+            if(confirm("Apagar este status?")) {
+                await deleteDoc(doc(db, "stories", id));
+                fecharStory();
+            }
         };
 
         // --- SISTEMA DE ÁUDIO ---
