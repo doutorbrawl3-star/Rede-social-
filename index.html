@@ -3,57 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V7.0</title>
+    <title>StackNet | Pro V6.0</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ff88">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <style>
-        /* VARIÁVEIS DE TEMA */
-        :root { 
-            --main: #00ff88; --bg: #0d1117; --card: #161b22; 
-            --border: #30363d; --text: #ffffff; --text-gray: #8b949e; 
-            --msg-other: #30363d; --input-bg: #161b22;
-        }
-
-        body.light-mode {
-            --bg: #f0f2f5; --card: #ffffff; --border: #dddddd; 
-            --text: #1c1e21; --text-gray: #65676b; 
-            --msg-other: #e4e6eb; --input-bg: #ffffff;
-        }
-
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; transition: 0.3s; }
+        :root { --main: #00ff88; --bg: #0d1117; --card: #161b22; --border: #30363d; --text-gray: #8b949e; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
         .hidden { display: none !important; }
 
         /* Nav */
-        nav { background: var(--card); padding: 10px; display: flex; justify-content: space-around; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; align-items: center; }
-        nav button { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        nav { background: var(--card); padding: 10px; display: flex; justify-content: space-around; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        nav button { background: transparent; border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; position: relative; font-size: 13px; }
+        .notif-ponto { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; position: absolute; top: -2px; right: -2px; border: 2px solid var(--card); }
 
-        /* Aba Perfil */
+        /* Perfil */
+        .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
+        .contadores { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        
+        /* Feed */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; background: var(--main); }
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: black; }
+        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; }
         
-        /* Chat e Balões */
-        #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-bottom: 10px; }
-        .msg-container { display: flex; flex-direction: column; max-width: 85%; width: fit-content; }
-        .msg-container.me { align-self: flex-end; }
+        /* Ações e Like */
+        .like-area { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; background: #30363d; padding: 5px 10px; border-radius: 20px; }
+        .curtido { color: #ff4444; }
+        .acoes-topo { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        .btn-acao { background: none; border: none; font-size: 11px; font-weight: bold; cursor: pointer; padding: 0; color: var(--text-gray); }
+        .btn-acao:hover { color: white; }
+
+        /* Comentários */
+        .comentario-box { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
+
+        /* Chat e Respostas */
+        .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
+        
+        #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
+        
+        .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
         .msg-container.other { align-self: flex-start; }
+        .msg-container.other .msg { border-radius: 15px 15px 15px 2px; }
+        .msg-container.me { align-self: flex-end; }
+        .msg-container.me .msg { border-radius: 15px 15px 2px 15px; }
+        .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         
-        .msg { padding: 10px 15px; font-size: 14px; border-radius: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .me .msg { background: var(--main); color: black; border-bottom-right-radius: 2px; }
-        .other .msg { background: var(--msg-other); color: var(--text); border-bottom-left-radius: 2px; }
+        /* Sistema de Reply (Citação) */
+        .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
+        .preview-reply { background: var(--card); padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 12px; display: flex; justify-content: space-between; border: 1px solid var(--border); border-bottom: none; align-items: center; }
 
-        /* Audio Player Style */
-        audio { height: 35px; width: 200px; margin-top: 5px; }
-
-        /* Botão de Gravar */
-        .btn-mic { background: #ff4444; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; }
-        .btn-mic.recording { transform: scale(1.3); box-shadow: 0 0 15px #ff4444; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        input, textarea { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .reply-box { background: rgba(0,0,0,0.1); border-left: 3px solid var(--main); padding: 5px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
+        input, textarea { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -62,63 +67,85 @@
         <div style="background:var(--card); padding:30px; border-radius:15px; text-align:center; border:1px solid var(--border); width:280px;">
             <h1>STACK<span>NET</span></h1>
             <input type="text" id="nome-usuario" placeholder="Teu nome...">
-            <button onclick="entrar()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; margin-top:10px;">Entrar</button>
+            <button onclick="entrar()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar</button>
         </div>
     </div>
 
     <div id="app-screen" class="hidden">
         <nav>
-            <button onclick="mudarAba('feed')">🔥</button>
-            <button onclick="mudarAba('chat-geral')">💬</button>
-            <button onclick="mudarAba('users')">👥</button>
-            <button onclick="mudarAba('perfil')">👤</button>
-            <button onclick="toggleTheme()">🌓</button>
-            <button onclick="sair()" style="color:#f44">✖</button>
+            <button onclick="mudarAba('feed')">🔥 Feed</button>
+            <button onclick="mudarAba('chat-geral')">💬 Geral</button>
+            <button onclick="mudarAba('users')">👥 Privado <div id="badge-privado" class="notif-ponto hidden"></div></button>
+            <button onclick="mudarAba('perfil')">👤 Perfil</button>
+            <button onclick="sair()" style="color:#f44">Sair</button>
         </nav>
 
         <div id="aba-perfil" class="aba hidden">
             <div style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:1px solid var(--border);">
                 <div class="avatar" id="perf-avatar" style="width:70px; height:70px; margin:0 auto; font-size:28px;"></div>
-                <h2 id="perf-nome" style="margin:10px 0;"></h2>
-                <div style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
-                    <div><b id="num-seguidores">0</b><br><small>Seguidores</small></div>
-                    <div><b id="num-seguindo">0</b><br><small>Seguindo</small></div>
+                <h2 id="perf-nome" style="color:var(--main); margin:10px 0 5px 0;"></h2>
+                
+                <div class="contadores">
+                    <div><b id="num-seguidores" style="font-size:18px;">0</b><br><small style="color:var(--text-gray)">Seguidores</small></div>
+                    <div><b id="num-seguindo" style="font-size:18px;">0</b><br><small style="color:var(--text-gray)">Seguindo</small></div>
                 </div>
-                <textarea id="bioInput" placeholder="Sua bio..."></textarea>
-                <button onclick="salvarBio()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold;">Salvar</button>
+
+                <p style="font-size:14px; margin-bottom:5px;">Escolha sua cor:</p>
+                <div style="margin-bottom:15px;">
+                    <div class="tema-btn" style="background:#00ff88" onclick="mudarCor('#00ff88')"></div>
+                    <div class="tema-btn" style="background:#0084ff" onclick="mudarCor('#0084ff')"></div>
+                    <div class="tema-btn" style="background:#a333ff" onclick="mudarCor('#a333ff')"></div>
+                    <div class="tema-btn" style="background:#ff8800" onclick="mudarCor('#ff8800')"></div>
+                </div>
+                <textarea id="bioInput" placeholder="Sua biografia..."></textarea>
+                <button onclick="salvarBio()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Salvar Perfil</button>
+                
+                <button id="btn-instalar" onclick="instalarApp()" class="hidden" style="background:#0084ff; color:white; border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">📲 Instalar StackNet</button>
             </div>
         </div>
 
         <div id="aba-feed" class="aba">
-            <textarea id="postInput" placeholder="O que há de novo?"></textarea>
-            <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold;">Postar</button>
-            <div id="feed-lista" style="margin-top:20px;"></div>
+            <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+                <textarea id="postInput" placeholder="O que há de novo? (Cole um link de imagem!)" style="margin-bottom:10px;"></textarea>
+                <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Publicar</button>
+            </div>
+            <div id="feed-lista"></div>
         </div>
 
         <div id="aba-chat-geral" class="aba hidden">
             <div id="chat-geral-lista"></div>
+            
+            <div id="preview-reply-geral" class="preview-reply hidden">
+                <span id="text-reply-geral" style="opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;"></span>
+                <button onclick="cancelarResposta('geral')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
+            </div>
+            
             <div style="display:flex; gap:8px;">
-                <input type="text" id="chatGeralInput" placeholder="Chat geral...">
-                <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; padding:0 15px;">Enviar</button>
+                <input type="text" id="chatGeralInput" placeholder="Mensagem para todos..." style="margin:0">
+                <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; width:80px; font-weight:bold;">Enviar</button>
             </div>
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <input type="text" id="buscaUsuario" placeholder="Procurar amigo...">
-            <div id="lista-usuarios" style="margin-top:10px;"></div>
+            <input type="text" id="buscaUsuario" placeholder="🔍 Procurar amigo..." oninput="filtrarUsuarios()">
+            <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
-                <div style="padding:15px; background:var(--card); display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border);">
-                    <button onclick="fecharChat()">⬅</button>
-                    <b id="chat-com-nome"></b>
+                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border);">
+                    <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">⬅</button>
+                    <b id="chat-com-nome" style="font-size:16px;"></b>
                 </div>
                 <div id="mensagens-privadas"></div>
-                <div id="texto-digitando" class="status-digitando" style="padding:0 15px; font-size:11px; color:var(--main);"></div>
+                <div id="texto-digitando" class="status-digitando"></div>
                 
-                <div style="padding:15px; display:flex; gap:10px; align-items:center; background:var(--card); border-top:1px solid var(--border);">
-                    <input type="text" id="msgPrivadaInput" placeholder="Mensagem..." style="flex:1">
-                    <button id="btn-audio" class="btn-mic" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()" ontouchstart="iniciarGravacao()" ontouchend="pararGravacao()">🎤</button>
-                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:50px; height:50px; font-weight:bold;">➤</button>
+                <div id="preview-reply-privado" class="preview-reply hidden" style="border-radius:0;">
+                    <span id="text-reply-privado" style="opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;"></span>
+                    <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
+                </div>
+                
+                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border);">
+                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0">
+                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:50px; cursor:pointer; font-weight:bold;">➤</button>
                 </div>
             </div>
         </div>
@@ -131,6 +158,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
             authDomain: "rede-social-8f031.firebaseapp.com",
+            databaseURL: "https://rede-social-8f031-default-rtdb.firebaseio.com",
             projectId: "rede-social-8f031",
             storageBucket: "rede-social-8f031.firebasestorage.app",
             messagingSenderId: "439234666870",
@@ -140,16 +168,36 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", mediaRecorder, audioChunks = [];
+        let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", abaAtiva = "feed", digitandoTimeout;
+        let meusSeguindo = []; 
+        let replyingToGeral = null;
+        let replyingToPrivado = null;
 
-        // --- TEMA ---
-        window.toggleTheme = () => {
-            document.body.classList.toggle('light-mode');
-            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+        // --- SISTEMA PWA (INSTALAÇÃO) ---
+        let instalador;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            instalador = e;
+            document.getElementById('btn-instalar').classList.remove('hidden'); // Mostra botão
+        });
+
+        window.instalarApp = async () => {
+            if(instalador) {
+                instalador.prompt();
+                const { outcome } = await instalador.userChoice;
+                if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden');
+                instalador = null;
+            }
         };
-        if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
 
-        // --- ENTRAR ---
+        // Registra o Service Worker (necessário para instalar)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
+        }
+
+        // --- SISTEMA CORE ---
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
@@ -157,99 +205,167 @@
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
-                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral();
+                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes();
             }
         };
 
-        // --- GRAVAÇÃO DE ÁUDIO ---
-        window.iniciarGravacao = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob); 
-                reader.onloadend = async () => {
-                    const base64Audio = reader.result;
-                    if(base64Audio.length > 1000000) return alert("Áudio muito longo!");
-                    enviarMensagemAudio(base64Audio);
-                };
-            };
-            mediaRecorder.start();
-            document.getElementById('btn-audio').classList.add('recording');
+        window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
+
+        window.mudarAba = (aba) => {
+            abaAtiva = aba;
+            if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
+            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
+            document.getElementById('aba-' + aba).classList.remove('hidden');
         };
 
-        window.pararGravacao = () => {
-            if(mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('btn-audio').classList.remove('recording');
+        window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
+
+        // --- SISTEMA DE RESPOSTAS (REPLY) ---
+        window.prepararResposta = (id, nome, texto, tipo) => {
+            const txtLindo = texto.replace(/\\'/g, "'"); // Arruma aspas se tiver
+            if (tipo === 'geral') {
+                replyingToGeral = { nome, texto: txtLindo };
+                document.getElementById('preview-reply-geral').classList.remove('hidden');
+                document.getElementById('text-reply-geral').innerText = `Responder a ${nome}: ${txtLindo}`;
+                document.getElementById('chatGeralInput').focus();
+            } else {
+                replyingToPrivado = { nome, texto: txtLindo };
+                document.getElementById('preview-reply-privado').classList.remove('hidden');
+                document.getElementById('text-reply-privado').innerText = `Responder a ${nome}: ${txtLindo}`;
+                document.getElementById('msgPrivadaInput').focus();
             }
         };
 
-        async function enviarMensagemAudio(base64) {
-            const chatId = [meuNome, chatAtivoId].sort().join("_");
-            await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
-                de: meuNome, audio: base64, data: Date.now(), lida: false 
+        window.cancelarResposta = (tipo) => {
+            if (tipo === 'geral') {
+                replyingToGeral = null;
+                document.getElementById('preview-reply-geral').classList.add('hidden');
+            } else {
+                replyingToPrivado = null;
+                document.getElementById('preview-reply-privado').classList.add('hidden');
+            }
+        };
+
+        // Restante das funções de Perfil, Edição, Seguir, Feed, Chat Geral e Chat Privado (igual à v5.1, com suporte ao reply)...
+        
+        window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
+        window.salvarBio = async () => { await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor }); alert("Perfil Salvo!"); };
+        async function carregarPerfil() {
+            onSnapshot(doc(db, "usuarios", meuNome), (d) => {
+                if(d.exists()) {
+                    const dados = d.data();
+                    minhaCor = dados.cor || "#00ff88"; meusSeguindo = dados.seguindo || [];
+                    document.documentElement.style.setProperty('--main', minhaCor);
+                    document.getElementById('perf-nome').innerText = meuNome;
+                    document.getElementById('perf-avatar').innerText = meuNome[0];
+                    document.getElementById('perf-avatar').style.background = minhaCor;
+                    document.getElementById('bioInput').value = dados.bio || "";
+                    document.getElementById('num-seguindo').innerText = meusSeguindo.length;
+                }
+            });
+            onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => document.getElementById('num-seguidores').innerText = snap.size);
+        }
+
+        window.postar = async () => {
+            const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
+            if(txt.trim()) { await addDoc(collection(db, "posts"), { nome: meuNome, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); document.getElementById('postInput').value = ""; }
+        };
+        window.toggleLike = async (postId) => { let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]"); const index = curtidos.indexOf(postId); if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); } localStorage.setItem('curtidos', JSON.stringify(curtidos)); };
+        window.comentar = async (postId) => { const msg = prompt("Deixe seu comentário:"); if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); } };
+        window.editarItem = async (caminho, id, campo, textoAntigo) => { const novo = prompt("Editar:", textoAntigo); if(novo && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(doc(db, caminho, id), { [campo]: novo, editado: true }); } };
+        window.toggleSeguir = async (idOutro, event) => { event.stopPropagation(); const ref = doc(db, "usuarios", meuNome); if(meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); } };
+        
+        function ouvirFeed() {
+            onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
+                const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
+                const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+                snap.forEach(p => {
+                    const d = p.data(); const ehCurtido = curtidos.includes(p.id);
+                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content', '${d.content.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
+                    let comentariosHTML = ""; if(d.comentarios) { d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; }); }
+                    feed.innerHTML += `<div class="post-card">${acoesTopo}<div class="card-header"><div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div><div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div></div><div style="font-size:15px; margin-bottom:10px;">${d.content}</div>${d.img ? `<img src="${d.img}" class="post-img">` : ""}<div style="display:flex; gap:10px; margin-top:15px;"><div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div><div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div></div><div style="margin-top:10px;">${comentariosHTML}</div></div>`;
+                });
             });
         }
 
-        // --- LOGICA DE CHAT ---
-        window.abrirChat = (id, corOutro) => {
-            chatAtivoId = id;
-            document.getElementById('janela-chat').classList.remove('hidden');
-            document.getElementById('chat-com-nome').innerText = id;
-            const chatId = [meuNome, id].sort().join("_");
-            
-            onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
-                const box = document.getElementById('mensagens-privadas');
-                box.innerHTML = "";
+        window.enviarGeral = async () => {
+            const txt = document.getElementById('chatGeralInput').value;
+            if(txt.trim()) { 
+                await addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false, replyTo: replyingToGeral }); 
+                document.getElementById('chatGeralInput').value = ""; 
+                cancelarResposta('geral');
+            }
+        };
+
+        function ouvirChatGeral() {
+            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
+                const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
                 snap.forEach(m => {
-                    const d = m.data();
-                    const souEu = d.de === meuNome;
-                    const conteudo = d.audio ? `<audio controls src="${d.audio}"></audio>` : d.texto;
-                    box.innerHTML += `
-                        <div class="msg-container ${souEu ? 'me' : 'other'}">
-                            <div class="msg">${conteudo}</div>
-                        </div>`;
+                    const d = m.data(); const souEu = d.nome === meuNome;
+                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${d.texto.replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
+                    botoesMsg += `</div>`;
+                    lista.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : '#30363d'}; color:${souEu ? 'black' : 'white'};">${replyHtml}<b style="font-size:10px; opacity:0.6;">${d.nome}</b><br>${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Editado)</i>' : ''}</div></div>${botoesMsg}</div>`;
+                });
+                lista.scrollTop = lista.scrollHeight;
+            });
+        }
+
+        window.filtrarUsuarios = () => { const b = document.getElementById('buscaUsuario').value.toLowerCase(); document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b))); };
+
+        function ouvirUsuarios() {
+            onSnapshot(collection(db, "usuarios"), (snap) => {
+                const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
+                snap.forEach(u => {
+                    if(u.id !== meuNome) {
+                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id);
+                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b><div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Seguindo' : 'Seguir'}</button></div>`;
+                    }
+                });
+            });
+        }
+
+        window.abrirChat = (id, corOutro) => {
+            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden'); document.getElementById('chat-com-nome').innerText = id;
+            const chatId = [meuNome, id].sort().join("_");
+            onSnapshot(doc(db, "digitando", chatId), (d) => document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "");
+            if(window.unsubChat) window.unsubChat();
+            window.unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
+                const box = document.getElementById('mensagens-privadas'); box.innerHTML = "";
+                snap.docs.forEach(m => {
+                    const d = m.data(); const souEu = d.de === meuNome;
+                    if (!souEu && d.lida !== true) updateDoc(doc(db, `chats/${chatId}/mensagens`, m.id), { lida: true });
+                    let iconLida = souEu ? `<span style="color:${d.lida ? '#000' : 'rgba(0,0,0,0.4)'}; font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>` : "";
+                    if(souEu && d.lida && minhaCor === '#000000') iconLida = `<span style="color:var(--main); font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>`;
+                    
+                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
+                    
+                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.texto.replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
+                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto', '${d.texto.replace(/'/g, "\\'")}')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
+                    botoesMsg += `</div>`;
+                    
+                    box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
         };
 
-        // Funções auxiliares (postar, mudarAba, etc) mantidas para funcionamento...
-        window.mudarAba = (aba) => {
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
-        };
         window.enviarPrivado = async () => {
             const input = document.getElementById('msgPrivadaInput');
-            if(input.value.trim()){
+            if(input.value.trim() && chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: input.value, data: Date.now() });
-                input.value = "";
+                const txt = input.value; input.value = "";
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado });
+                await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+                cancelarResposta('privado');
             }
         };
-        window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
-        window.sair = () => location.reload();
 
-        // Escutadores básicos
-        function ouvirFeed() { onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), s => {
-            const f = document.getElementById('feed-lista'); f.innerHTML = "";
-            s.forEach(p => { f.innerHTML += `<div class="post-card"><b>${p.data().nome}</b><p>${p.data().content}</p></div>`; });
-        });}
-        function ouvirUsuarios() { onSnapshot(collection(db, "usuarios"), s => {
-            const l = document.getElementById('lista-usuarios'); l.innerHTML = "";
-            s.forEach(u => { if(u.id !== meuNome) l.innerHTML += `<div class="post-card" onclick="abrirChat('${u.id}')">${u.id}</div>`; });
-        });}
-        async function carregarPerfil() { document.getElementById('perf-nome').innerText = meuNome; document.getElementById('perf-avatar').innerText = meuNome[0]; }
-        window.postar = () => { const t = document.getElementById('postInput'); if(t.value) addDoc(collection(db, "posts"), { nome: meuNome, content: t.value, data: Date.now() }); t.value = ""; };
-        function ouvirChatGeral() { onSnapshot(query(collection(db, "chat_geral"), orderBy("data")), s => {
-            const l = document.getElementById('chat-geral-lista'); l.innerHTML = "";
-            s.forEach(m => { l.innerHTML += `<div><b>${m.data().nome}:</b> ${m.data().texto}</div>`; });
-        });}
-        window.enviarGeral = () => { const i = document.getElementById('chatGeralInput'); if(i.value) addDoc(collection(db, "chat_geral"), { nome: meuNome, texto: i.value, data: Date.now() }); i.value = ""; };
+        window.avisarDigitando = async () => { if(!chatAtivoId) return; const chatId = [meuNome, chatAtivoId].sort().join("_"); await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true }); clearTimeout(digitandoTimeout); digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000); };
+        window.fecharChat = () => { document.getElementById('janela-chat').classList.add('hidden'); cancelarResposta('privado'); };
+        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
     </script>
 </body>
 </html>
