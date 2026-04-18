@@ -41,21 +41,21 @@
         .btn-acao { background: none; border: none; font-size: 11px; font-weight: bold; cursor: pointer; padding: 0; color: var(--text-gray); }
         .comentario-box { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
 
-        /* Chat, Respostas e Contatos */
+        /* Chat e Respostas */
         .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
         .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
         
+        /* Filtros de contatos */
         .filtros-contatos { display: flex; gap: 10px; margin-bottom: 10px; }
         .btn-filtro { flex: 1; padding: 8px; background: var(--card); color: var(--text-gray); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-filtro.ativo { background: var(--main); color: black; border-color: var(--main); }
 
         #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
+        
         .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
         .msg-container.other { align-self: flex-start; }
-        .msg-container.other .msg { border-radius: 15px 15px 15px 2px; }
         .msg-container.me { align-self: flex-end; }
-        .msg-container.me .msg { border-radius: 15px 15px 2px 15px; }
         .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         
@@ -65,7 +65,7 @@
         .btn-upload-icon { background: #a333ff; font-size: 20px; }
         .img-chat { max-width: 200px; border-radius: 8px; margin-top: 5px; }
 
-        .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; }
+        .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .velha-cell { width: 50px; height: 50px; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; color: white; }
 
         input, textarea, select { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
@@ -74,7 +74,12 @@
         #tela-chamada { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .videos-chamada { position: relative; width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; }
         #video-remoto { width: 100%; height: 100%; object-fit: cover; background: #111; }
-        #video-local { width: 120px; height: 160px; position: absolute; bottom: 100px; right: 20px; border: 2px solid var(--main); border-radius: 10px; }
+        #video-local { width: 120px; height: 160px; position: absolute; bottom: 100px; right: 20px; border: 2px solid var(--main); border-radius: 10px; background: #222; }
+        .controles-chamada { position: absolute; bottom: 30px; display: flex; gap: 30px; width: 100%; justify-content: center; }
+        .btn-call { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .btn-desligar { background: #ff4444; color: white; }
+        .btn-atender { background: #00ff88; color: black; animation: pulse 1s infinite; }
+        #chamada-info { position: absolute; top: 60px; text-align: center; width: 100%; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 10; }
         
         #upload-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
     </style>
@@ -89,7 +94,7 @@
     </div>
 
     <div id="upload-overlay" class="hidden">
-        <p>Enviando Arquivo...</p>
+        <p>A processar imagem...</p>
         <p style="font-size:30px; animation: pulse 1s infinite;">⏳</p>
     </div>
 
@@ -106,18 +111,21 @@
             <div style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:1px solid var(--border);">
                 <div class="avatar" id="perf-avatar" style="width:70px; height:70px; margin:0 auto; font-size:28px;"></div>
                 <h2 id="perf-nome" style="color:var(--main); margin:10px 0 5px 0;"></h2>
+                
                 <div class="contadores">
                     <div><b id="num-seguidores">0</b><br><small style="color:var(--text-gray)">Seguidores</small></div>
                     <div><b id="num-seguindo">0</b><br><small style="color:var(--text-gray)">Seguindo</small></div>
                 </div>
-                <p style="font-size:14px; margin-bottom:5px;">Sua Cor:</p>
+
+                <p style="font-size:14px; margin-bottom:5px;">Escolha sua cor:</p>
                 <div style="margin-bottom:15px;">
                     <div class="tema-btn" style="background:#00ff88" onclick="mudarCor('#00ff88')"></div>
                     <div class="tema-btn" style="background:#0084ff" onclick="mudarCor('#0084ff')"></div>
                     <div class="tema-btn" style="background:#a333ff" onclick="mudarCor('#a333ff')"></div>
                     <div class="tema-btn" style="background:#ff8800" onclick="mudarCor('#ff8800')"></div>
                 </div>
-                <p style="font-size:14px; margin-bottom:5px;">Seu Título:</p>
+                
+                <p style="font-size:14px; margin-bottom:5px;">Escolha sua Tag:</p>
                 <select id="tagInput">
                     <option value="">Sem Tag</option>
                     <option value="💻 [Dev]">💻 [Dev]</option>
@@ -126,9 +134,9 @@
                     <option value="👑 [VIP]">👑 [VIP]</option>
                     <option value="🚀 [Criador]">🚀 [Criador]</option>
                 </select>
+
                 <textarea id="bioInput" placeholder="Sua biografia..."></textarea>
                 <button onclick="salvarBio()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; color:black;">Salvar Perfil</button>
-                <button id="btn-instalar" onclick="instalarApp()" class="hidden" style="background:#0084ff; color:white; border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">📲 Instalar StackNet</button>
             </div>
         </div>
 
@@ -137,41 +145,33 @@
                 <div class="story-circle story-add" onclick="postarStory()">+</div>
                 <div id="stories-list" style="display:contents;"></div>
             </div>
+
             <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                <textarea id="postInput" placeholder="No que está pensando?"></textarea>
+                <textarea id="postInput" placeholder="No que estás a pensar?"></textarea>
                 <div style="display:flex; gap:10px;">
                     <input type="file" id="filePost" accept="image/*" class="hidden" onchange="postarComImagem(event)">
-                    <button onclick="document.getElementById('filePost').click()" class="btn-chat-extra btn-upload-icon" style="width: 40px; height: 40px; border-radius: 8px;">📎</button>
-                    <button onclick="postar()" style="background:var(--main); border:none; padding:10px; flex:1; border-radius:8px; font-weight:bold; cursor:pointer; color:black;">Publicar</button>
+                    <button onclick="document.getElementById('filePost').click()" class="btn-chat-extra btn-upload-icon" style="width:40px; height:40px; border-radius:8px;">📎</button>
+                    <button onclick="postar()" style="background:var(--main); border:none; flex:1; border-radius:8px; font-weight:bold; color:black;">Publicar</button>
                 </div>
             </div>
             <div id="feed-lista"></div>
         </div>
 
-        <div id="aba-chat-geral" class="aba hidden">
-            <div id="chat-geral-lista"></div>
-            <div id="preview-reply-geral" class="preview-reply hidden">
-                <span id="text-reply-geral"></span>
-                <button onclick="cancelarResposta('geral')" style="background:none; border:none; color:#f44; cursor:pointer;">X</button>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="chatGeralInput" placeholder="Mensagem para todos..." style="margin:0">
-                <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; width:80px; font-weight:bold; color:black;">Enviar</button>
-            </div>
-        </div>
-
         <div id="aba-users" class="aba hidden">
             <input type="text" id="buscaUsuario" placeholder="🔍 Procurar amigo..." oninput="filtrarUsuarios()">
+            
             <div class="filtros-contatos">
-                <button id="btn-meus-contatos" class="btn-filtro ativo" onclick="mudarFiltroContatos('meus')">Meus Contatos</button>
-                <button id="btn-explorar-contatos" class="btn-filtro" onclick="mudarFiltroContatos('todos')">Explorar (Todos)</button>
+                <button id="btn-meus-contatos" class="btn-filtro ativo" onclick="mudarFiltroContatos('meus')">Meus Contactos</button>
+                <button id="btn-explorar-contatos" class="btn-filtro" onclick="mudarFiltroContatos('todos')">Explorar Todos</button>
             </div>
+
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
-                <div style="padding:15px; background:var(--card); display:flex; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="padding:15px; background:var(--card); display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border);">
                     <button onclick="fecharChat()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold;">⬅</button>
-                    <b id="chat-com-nome" style="margin-left:10px;"></b>
+                    <b id="chat-com-nome" style="font-size:16px; margin-left:10px;"></b>
+                    
                     <div style="flex:1; display:flex; justify-content:flex-end; gap:15px;">
                         <button onclick="iniciarChamada('audio')" style="background:none; border:none; font-size:22px;">📞</button>
                         <button onclick="iniciarChamada('video')" style="background:none; border:none; font-size:22px;">📹</button>
@@ -179,34 +179,38 @@
                 </div>
                 <div id="mensagens-privadas"></div>
                 <div id="texto-digitando" style="padding:0 15px; font-size:12px; color:var(--main); height:15px;"></div>
+                
                 <div id="preview-reply-privado" class="preview-reply hidden" style="border-radius:0;">
                     <span id="text-reply-privado"></span>
                     <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44;">X</button>
                 </div>
+                
                 <div style="padding:10px 15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center;">
                     <input type="file" id="fileChat" accept="image/*" class="hidden" onchange="enviarImagemPrivada(event)">
                     <button onclick="document.getElementById('fileChat').click()" class="btn-chat-extra btn-upload-icon">📎</button>
                     <button class="btn-chat-extra btn-game-icon" onclick="enviarJogoVelha()">🎮</button>
-                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex:1;">
-                    <button id="btn-audio" class="btn-chat-extra" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()" ontouchstart="iniciarGravacao()" ontouchend="pararGravacao()">🎤</button>
-                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height:45px; font-weight:bold; color:black;">➤</button>
+                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex: 1;">
+                    <button id="btn-audio" class="btn-chat-extra" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()">🎤</button>
+                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height: 45px; font-weight:bold; color:black;">➤</button>
                 </div>
             </div>
         </div>
 
-        <div id="story-viewer" class="hidden">
-            <div style="width: 100%; display: flex; justify-content: space-between; padding: 20px; position: absolute; top: 0; box-sizing: border-box;">
-                <button id="btn-del-story" class="hidden" style="background:none; border:none; color:#ff4444; font-size:24px; font-weight:bold;">🗑️</button>
-                <button onclick="fecharStory()" style="background:none; border:none; color:white; font-size:30px; font-weight:bold;">✖</button>
+        <div id="aba-chat-geral" class="aba hidden">
+            <div id="chat-geral-lista"></div>
+            <div id="preview-reply-geral" class="preview-reply hidden">
+                <span id="text-reply-geral"></span>
+                <button onclick="cancelarResposta('geral')" style="background:none; border:none; color:#f44;">X</button>
             </div>
-            <div class="avatar" id="sv-avatar" style="width:80px; height:80px; font-size:35px;"></div>
-            <h2 id="sv-nome" style="color:var(--main); margin-top:15px;"></h2>
-            <p id="sv-texto" style="font-size:24px; color:white; word-wrap: break-word; max-width:90%;"></p>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="chatGeralInput" placeholder="Mensagem geral..." style="margin:0">
+                <button onclick="enviarGeral()" style="background:var(--main); border:none; border-radius:8px; width:80px; font-weight:bold; color:black;">Enviar</button>
+            </div>
         </div>
 
         <div id="tela-chamada" class="hidden">
             <div id="chamada-info" style="position:absolute; top:60px; text-align:center; width:100%; z-index:10;">
-                <h2 id="chamada-nome" style="font-size:28px;"></h2>
+                <h2 id="chamada-nome" style="font-size:28px;">Amigo</h2>
                 <p id="chamada-status">Chamando...</p>
             </div>
             <video id="video-remoto" autoplay playsinline></video>
@@ -220,7 +224,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -234,17 +237,16 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app); 
 
         let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", minhaTag = "", abaAtiva = "feed", digitandoTimeout;
         let meusSeguindo = []; 
         let replyingToGeral = null, replyingToPrivado = null;
         let mediaRecorder, audioChunks = [];
-        let filtroContatoAtual = "meus";
+        let filtroContatoAtual = "meus"; 
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
-        // --- CONVERSOR DE IMAGEM PARA BASE64 (PARA NÃO PRECISAR PAGAR STORAGE) ---
+        // --- CONVERSOR DE IMAGEM (BASE64) PARA MODO GRÁTIS ---
         const converterParaBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -255,12 +257,12 @@
         window.postarComImagem = async (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 600000) return alert("Foto muito pesada! Escolha uma menor que 500kb.");
+            if (file.size > 600000) return alert("Imagem muito pesada! Tente uma menor que 500kb.");
             document.getElementById('upload-overlay').classList.remove('hidden');
             const base64 = await converterParaBase64(file);
             await addDoc(collection(db, "posts"), { 
                 nome: meuNome, tag: minhaTag, content: document.getElementById('postInput').value, 
-                img: base64, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false 
+                img: base64, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor 
             });
             document.getElementById('upload-overlay').classList.add('hidden');
             document.getElementById('postInput').value = "";
@@ -276,10 +278,9 @@
                 de: meuNome, texto: "", img: base64, data: Date.now(), dataStr: formataData(), lida: false 
             });
             document.getElementById('upload-overlay').classList.add('hidden');
-            await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
 
-        // --- LÓGICA DE CHAMADAS WEBRTC ---
+        // --- LÓGICA DE CHAMADAS ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
         let pcChamada = null, streamLocal = null, streamRemoto = null, chamadaAtualId = null;
 
@@ -290,7 +291,7 @@
                 document.getElementById('video-local').srcObject = streamLocal;
                 if(tipo === 'audio') document.getElementById('video-local').classList.add('hidden');
                 else document.getElementById('video-local').classList.remove('hidden');
-            } catch(e) { alert("Permita câmera/microfone!"); }
+            } catch(e) { console.error("Erro mídia:", e); }
         }
 
         window.iniciarChamada = async (tipo) => {
@@ -363,19 +364,12 @@
                         chamadaAtualId = c.doc.id;
                         document.getElementById('tela-chamada').classList.remove('hidden');
                         document.getElementById('chamada-nome').innerText = d.de;
-                        document.getElementById('chamada-status').innerText = d.tipo === 'video' ? "Vídeo Chamada..." : "Ligação de Áudio...";
+                        document.getElementById('chamada-status').innerText = d.tipo === 'video' ? "Chamada de vídeo..." : "Chamada de voz...";
                         document.getElementById('btn-atender-chamada').classList.remove('hidden');
                     }
                 });
             });
         }
-
-        window.mudarAba = (aba) => {
-            abaAtiva = aba;
-            if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
-        };
 
         window.mudarFiltroContatos = (tipo) => {
             filtroContatoAtual = tipo;
@@ -420,7 +414,7 @@
                     lista.innerHTML += `<div class="user-card" onclick="abrirChat('${u.id}', '${d.cor}')">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div>
-                            <b>${u.id} ${d.online ? '🟢' : ''}</b>
+                            <b>${u.id} ${d.online ? '<span style="color:#00ff00">●</span>' : ''}</b>
                         </div>
                         <button class="btn-seguir ${seguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${seguindo ? 'Remover' : 'Adicionar'}</button>
                     </div>`;
@@ -446,7 +440,7 @@
                     if(d.tipo === 'jogo_velha') {
                         conteudo = `<div style="text-align:center;"><b>Jogo da Velha</b><div class="velha-board">`;
                         d.tabuleiro.forEach((c, i) => { conteudo += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${i}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${c}</div>`; });
-                        conteudo += `</div><small>${d.vencedor ? 'Fim de Jogo!' : 'Turno: '+d.turno}</small></div>`;
+                        conteudo += `</div><small>${d.vencedor ? 'Vencedor: '+d.vencedor : 'Turno: '+d.turno}</small></div>`;
                     } else if(d.img) {
                         conteudo = `<img src="${d.img}" class="img-chat">`;
                     } else {
@@ -462,6 +456,15 @@
             });
         };
 
+        window.jogarVelha = async (msgId, index, turno, vencedor, tabStr) => {
+            if(vencedor || turno !== meuNome) return;
+            let tab = tabStr.split(',');
+            if(tab[index]) return;
+            tab[index] = 'X'; // Simplificado para teste
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            await updateDoc(doc(db, `chats/${chatId}/mensagens`, msgId), { tabuleiro: tab, turno: chatAtivoId });
+        };
+
         window.enviarPrivado = async () => {
             const input = document.getElementById('msgPrivadaInput');
             if(!input.value.trim() || !chatAtivoId) return;
@@ -471,11 +474,10 @@
             await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
 
-        // --- SISTEMAS DE APOIO (STORY, FEED, GERAL) ---
         window.postar = async () => {
             const txt = document.getElementById('postInput').value;
             if(txt.trim()) { 
-                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData(), likes: 0, cor: minhaCor });
+                await addDoc(collection(db, "posts"), { nome: meuNome, content: txt, data: Date.now(), dataStr: formataData(), likes: 0, cor: minhaCor, tag: minhaTag });
                 document.getElementById('postInput').value = ""; 
             }
         };
@@ -486,9 +488,8 @@
                 snap.forEach(p => {
                     const d = p.data();
                     lista.innerHTML += `<div class="post-card">
-                        <div class="card-header"><div class="avatar" style="background:${d.cor}">${d.nome[0]}</div><b>${d.nome}</b></div>
-                        <p>${d.content}</p>
-                        ${d.img ? `<img src="${d.img}" class="post-img">` : ""}
+                        <div class="card-header"><div class="avatar" style="background:${d.cor}">${d.nome[0]}</div><b>${d.nome}</b> <span class="tag-user">${d.tag}</span></div>
+                        <p>${d.content}</p>${d.img ? `<img src="${d.img}" class="post-img">` : ""}
                         <div class="like-area" onclick="toggleLike('${p.id}', ${d.likes})">❤️ ${d.likes}</div>
                     </div>`;
                 });
@@ -497,18 +498,15 @@
 
         window.toggleLike = async (id, atual) => { await updateDoc(doc(db, "posts", id), { likes: atual + 1 }); };
         window.sair = () => { updateDoc(doc(db, "usuarios", meuNome), { online: false }).then(() => location.reload()); };
+        window.mudarAba = (aba) => { abaAtiva = aba; document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden')); document.getElementById('aba-' + aba).classList.remove('hidden'); };
         window.fecharChat = () => document.getElementById('janela-chat').classList.add('hidden');
-        function ouvirChatGeral() { onSnapshot(query(collection(db, "chat_geral"), orderBy("data")), snap => { /* lógica simples */ }); }
-        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), snap => { if(!snap.empty) document.getElementById('badge-privado').classList.remove('hidden'); }); }
-        
-        // --- FINALIZAÇÃO ---
-        window.postarStory = async () => {
-            const t = prompt("Status de hoje:");
-            if(t) await addDoc(collection(db, "stories"), { nome: meuNome, texto: t, data: Date.now(), cor: minhaCor });
-        };
-        function ouvirStories() { onSnapshot(collection(db, "stories"), snap => { /* lógica simples */ }); }
-        window.salvarBio = () => { alert("Perfil salvo!"); };
+        window.avisarDigitando = () => {}; 
+        window.salvarBio = async () => { minhaTag = document.getElementById('tagInput').value; await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, tag: minhaTag }); alert("Perfil Salvo!"); };
         window.mudarCor = (c) => { minhaCor = c; document.documentElement.style.setProperty('--main', c); };
+        window.postarStory = async () => { const t = prompt("Teu status:"); if(t) await addDoc(collection(db, "stories"), { nome: meuNome, texto: t, data: Date.now(), cor: minhaCor }); };
+        function ouvirStories() { onSnapshot(collection(db, "stories"), snap => { const list = document.getElementById('stories-list'); list.innerHTML = ""; snap.forEach(s => { const d = s.data(); list.innerHTML += `<div class="story-circle" style="background:${d.cor}" onclick="alert('${d.texto}')">${d.nome[0]}</div>`; }); }); }
+        function ouvirChatGeral() { onSnapshot(query(collection(db, "chat_geral"), orderBy("data")), snap => { const list = document.getElementById('chat-geral-lista'); list.innerHTML = ""; snap.forEach(m => { const d = m.data(); list.innerHTML += `<div><b>${d.nome}:</b> ${d.texto}</div>`; }); }); }
+        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), snap => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
     </script>
 </body>
 </html>
