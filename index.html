@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V9.1</title>
+    <title>StackNet | Pro V10.0</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ff88">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,8 +21,6 @@
         /* Perfil */
         .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
         .contadores { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        
-        /* Nova Tag do Usuário */
         .tag-user { font-size: 10px; background: var(--main); color: black; padding: 2px 6px; border-radius: 5px; margin-left: 5px; font-weight: bold; vertical-align: middle; }
         
         /* Feed & Stories */
@@ -52,11 +50,6 @@
         .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
         
-        /* NOVO: Filtros da aba de contatos */
-        .filtros-contatos { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-filtro { flex: 1; padding: 8px; background: var(--card); color: var(--text-gray); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-filtro.ativo { background: var(--main); color: black; border-color: var(--main); }
-
         #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
         
         .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
@@ -67,12 +60,14 @@
         .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         
-        /* Botão Mic e Jogo */
+        /* Botão Mic, Jogo e Upload */
         .btn-chat-extra { background: #ff4444; color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0; }
         .btn-game-icon { background: #0084ff; font-size: 22px; }
+        .btn-upload-icon { background: #a333ff; font-size: 20px; }
         .btn-chat-extra.recording { transform: scale(1.2); box-shadow: 0 0 15px #ff4444; animation: pulse 1s infinite; }
         @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
         audio { max-width: 200px; height: 35px; margin-top: 5px; }
+        .img-chat { max-width: 200px; border-radius: 8px; margin-top: 5px; }
 
         /* Estilo do Jogo da Velha no Chat */
         .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
@@ -94,6 +89,9 @@
         .btn-desligar { background: #ff4444; color: white; }
         .btn-atender { background: #00ff88; color: black; animation: pulse 1s infinite; }
         #chamada-info { position: absolute; top: 60px; text-align: center; width: 100%; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 10; }
+
+        /* Overlay de Loading de Upload */
+        #upload-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -104,6 +102,11 @@
             <input type="text" id="nome-usuario" placeholder="Teu nome...">
             <button onclick="entrar()" style="background:var(--main); border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar</button>
         </div>
+    </div>
+
+    <div id="upload-overlay" class="hidden">
+        <p>Enviando Arquivo...</p>
+        <p style="font-size:30px; animation: pulse 1s infinite;">⏳</p>
     </div>
 
     <div id="app-screen" class="hidden">
@@ -157,8 +160,13 @@
             </div>
 
             <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                <textarea id="postInput" placeholder="O que há de novo? (Cole um link de imagem!)" style="margin-bottom:10px;"></textarea>
-                <button onclick="postar()" style="background:var(--main); border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Publicar</button>
+                <textarea id="postInput" placeholder="O que há de novo? (Pode escrever e mandar imagem junto!)" style="margin-bottom:10px;"></textarea>
+                
+                <div style="display:flex; gap:10px;">
+                    <input type="file" id="filePost" accept="image/*" class="hidden" onchange="postarComImagem(event)">
+                    <button onclick="document.getElementById('filePost').click()" class="btn-chat-extra btn-upload-icon" style="width: 40px; height: 40px; border-radius: 8px;">📎</button>
+                    <button onclick="postar()" style="background:var(--main); border:none; padding:10px; flex:1; border-radius:8px; font-weight:bold; cursor:pointer; color:black;">Publicar Texto/Link</button>
+                </div>
             </div>
             <div id="feed-lista"></div>
         </div>
@@ -178,13 +186,7 @@
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <input type="text" id="buscaUsuario" placeholder="🔍 Procurar alguém..." oninput="filtrarUsuarios()">
-            
-            <div class="filtros-contatos">
-                <button id="btn-meus-contatos" class="btn-filtro ativo" onclick="mudarFiltroContatos('meus')">Meus Contatos</button>
-                <button id="btn-explorar-contatos" class="btn-filtro" onclick="mudarFiltroContatos('todos')">Explorar (Todos)</button>
-            </div>
-
+            <input type="text" id="buscaUsuario" placeholder="🔍 Procurar amigo..." oninput="filtrarUsuarios()">
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
@@ -205,11 +207,16 @@
                     <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
                 </div>
                 
-                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center;">
-                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex: 1;">
+                <div style="padding:10px 15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center;">
+                    <input type="file" id="fileChat" accept="image/*" class="hidden" onchange="enviarImagemPrivada(event)">
+                    <button onclick="document.getElementById('fileChat').click()" class="btn-chat-extra btn-upload-icon">📎</button>
+                    
                     <button class="btn-chat-extra btn-game-icon" onclick="enviarJogoVelha()">🎮</button>
+                    
+                    <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex: 1; padding: 12px 10px;">
+                    
                     <button id="btn-audio" class="btn-chat-extra" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()" ontouchstart="iniciarGravacao()" ontouchend="pararGravacao()">🎤</button>
-                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height: 45px; cursor:pointer; font-weight:bold; flex-shrink: 0;">➤</button>
+                    <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height: 45px; cursor:pointer; font-weight:bold; flex-shrink: 0; color: black;">➤</button>
                 </div>
             </div>
         </div>
@@ -244,6 +251,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        // NOVO: Importando Firebase Storage para Imagens
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
@@ -257,15 +266,88 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app); // NOVO: Referência do Storage
 
         let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", minhaTag = "", abaAtiva = "feed", digitandoTimeout;
         let meusSeguindo = []; 
         let replyingToGeral = null;
         let replyingToPrivado = null;
         let mediaRecorder, audioChunks = [];
-        let filtroContatoAtual = "meus"; // NOVO: Controle da aba de contatos
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+        // --- NOVO: LÓGICA DE UPLOAD DE IMAGEM NO STORAGE ---
+        async function uploadImagem(file) {
+            return new Promise((resolve, reject) => {
+                document.getElementById('upload-overlay').classList.remove('hidden');
+                
+                // Cria um nome de arquivo único para não sobrepor
+                const fileName = `${Date.now()}_${file.name}`;
+                const storageRef = ref(storage, `imagens/${fileName}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        // Poderia colocar uma barra de progresso aqui
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                    }, 
+                    (error) => {
+                        document.getElementById('upload-overlay').classList.add('hidden');
+                        alert("Erro ao enviar imagem. Tente uma foto menor.");
+                        reject(error);
+                    }, 
+                    () => {
+                        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                            document.getElementById('upload-overlay').classList.add('hidden');
+                            resolve(downloadURL); // Retorna a URL pública gerada
+                        });
+                    }
+                );
+            });
+        }
+
+        // Postar no feed pegando foto da galeria
+        window.postarComImagem = async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const txt = document.getElementById('postInput').value;
+            
+            try {
+                const imgUrlPublica = await uploadImagem(file);
+                await addDoc(collection(db, "posts"), { 
+                    nome: meuNome, tag: minhaTag, content: txt, img: imgUrlPublica, 
+                    data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false 
+                }); 
+                document.getElementById('postInput').value = ""; 
+                document.getElementById('filePost').value = ""; // Limpa o input
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        // Enviar foto no chat privado
+        window.enviarImagemPrivada = async (event) => {
+            const file = event.target.files[0];
+            if (!file || !chatAtivoId) return;
+            
+            try {
+                const imgUrlPublica = await uploadImagem(file);
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
+                    de: meuNome, tag: minhaTag, texto: "", img: imgUrlPublica, 
+                    data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado 
+                });
+                
+                document.getElementById('fileChat').value = ""; // Limpa
+                await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+                cancelarResposta('privado');
+            } catch (e) {
+                console.log(e);
+            }
+        };
 
         // --- LÓGICA DE CHAMADAS (WEBRTC) ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
@@ -651,7 +733,7 @@
 
         window.postar = async () => {
             const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
-            if(txt.trim()) { 
+            if(txt.trim() || imgUrl) { // Editado para aceitar postar apenas imagem
                 await addDoc(collection(db, "posts"), { nome: meuNome, tag: minhaTag, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); 
                 document.getElementById('postInput').value = ""; 
             }
@@ -713,7 +795,6 @@
 
         window.filtrarUsuarios = () => { const b = document.getElementById('buscaUsuario').value.toLowerCase(); document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b))); };
 
-        // NOVO: Função de listar os usuários atualizada para usar a aba "Meus Contatos" e "Todos"
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
@@ -756,14 +837,16 @@
                         boardHtml += `</div>`;
                         let status = d.vencedor ? (d.vencedor==='Empate'?'Deu Velha! 👵':`Vencedor: ${d.vencedor} 🏆`) : (d.turno === meuNome ? '🔥 Sua vez!' : '⏳ Vez do adversário');
                         conteudo = `<div style="text-align:center; padding-top:5px;"><b>Jogo da Velha</b><br><small>${status}</small>${boardHtml}</div>`;
+                    } else if (d.img) {
+                        conteudo = d.texto ? `${d.texto}<br><img src="${d.img}" class="img-chat">` : `<img src="${d.img}" class="img-chat">`;
                     } else {
                         conteudo = d.audio ? `<audio controls src="${d.audio}"></audio>` : d.texto;
                     }
                     
                     let botoesMsg = "";
                     if(d.tipo !== 'jogo_velha') {
-                        botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : (d.texto||"").replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
-                        if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto')" ${d.audio ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
+                        botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.img ? '[Imagem]' : d.audio ? '[Áudio]' : (d.texto||"").replace(/'/g, "\\'")}', 'privado')">Responder</button>`;
+                        if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto')" ${d.audio || d.img ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
                         botoesMsg += `</div>`;
                     } else if (souEu) {
                          botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar Jogo</button></div>`;
