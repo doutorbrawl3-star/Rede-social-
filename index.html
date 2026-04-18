@@ -543,16 +543,71 @@
         window.instalarApp = async () => { if(instalador) { instalador.prompt(); const { outcome } = await instalador.userChoice; if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden'); instalador = null; } };
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
 
-        // --- SISTEMA CORE ---
+                 // --- SISTEMA CORE ---
+
+        // 1. Áudio de toque de telefone
+        const toqueChamada = new Audio("https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg");
+        toqueChamada.loop = true; 
+
+        // 2. Permissão de Notificação
+        window.pedirPermissaoNotificacao = async () => {
+            if ("Notification" in window) {
+                const p = await Notification.requestPermission();
+                if(p === "granted") console.log("Notificações ativadas!");
+            }
+        };
+
+        // 3. O NOVO Entrar (Pede permissão para o celular vibrar/tocar)
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
                 meuNome = nome;
-                document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
+                
+                pedirPermissaoNotificacao(); 
+                
                 carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories(); escutarChamadas();
             }
         };
+
+        // 4. A NOVA função de escutar chamadas (Substitui a antiga automaticamente)
+        function escutarChamadas() {
+            onSnapshot(query(collection(db, "chamadas"), where("para", "==", meuNome)), snap => {
+                snap.docChanges().forEach(c => {
+                    const d = c.doc.data();
+                    
+                    if(d.status === "chamando") {
+                        chamadaAtualId = c.doc.id;
+                        document.getElementById('tela-chamada').classList.remove('hidden');
+                        document.getElementById('chamada-nome').innerText = d.de;
+                        document.getElementById('chamada-status').innerText = d.tipo === 'video' ? "Vídeo Chamada..." : "Ligação de Áudio...";
+                        document.getElementById('btn-atender-chamada').classList.remove('hidden');
+
+                        toqueChamada.play().catch(e => console.log("Erro no som:", e));
+                        
+                        if (Notification.permission === "granted") {
+                            navigator.serviceWorker.ready.then(reg => {
+                                reg.showNotification(`📞 Nova Chamada de ${d.de}`, {
+                                    body: "Clique aqui para atender na StackNet!",
+                                    vibrate: [200, 100, 200, 100, 200, 100, 200], 
+                                    requireInteraction: true 
+                                });
+                            }).catch(() => {
+                                new Notification(`📞 Chamada de ${d.de}`, { body: "Abra o app para atender!", requireInteraction: true });
+                            });
+                        }
+                        
+                    } else if (d.status === "encerrada" || d.status === "atendida" || d.status === "rejeitada") {
+                        toqueChamada.pause();
+                        toqueChamada.currentTime = 0;
+                        desligarLocal();
+                    }
+                });
+            });
+        }
+
 
         window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
 
