@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StackNet | Pro V9.0</title>
+    <title>StackNet | Pro V9.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ff88">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -52,6 +52,11 @@
         .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
         
+        /* NOVO: Filtros da aba de contatos */
+        .filtros-contatos { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-filtro { flex: 1; padding: 8px; background: var(--card); color: var(--text-gray); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-filtro.ativo { background: var(--main); color: black; border-color: var(--main); }
+
         #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
         
         .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
@@ -79,7 +84,7 @@
 
         input, textarea, select { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
 
-        /* NOVO: Tela de Chamada WebRTC */
+        /* Tela de Chamada WebRTC */
         #tela-chamada { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .videos-chamada { position: relative; width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; }
         #video-remoto { width: 100%; height: 100%; object-fit: cover; background: #111; }
@@ -173,7 +178,13 @@
         </div>
 
         <div id="aba-users" class="aba hidden">
-            <input type="text" id="buscaUsuario" placeholder="🔍 Procurar amigo..." oninput="filtrarUsuarios()">
+            <input type="text" id="buscaUsuario" placeholder="🔍 Procurar alguém..." oninput="filtrarUsuarios()">
+            
+            <div class="filtros-contatos">
+                <button id="btn-meus-contatos" class="btn-filtro ativo" onclick="mudarFiltroContatos('meus')">Meus Contatos</button>
+                <button id="btn-explorar-contatos" class="btn-filtro" onclick="mudarFiltroContatos('todos')">Explorar (Todos)</button>
+            </div>
+
             <div id="lista-usuarios"></div>
             
             <div id="janela-chat" class="hidden" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column;">
@@ -252,6 +263,7 @@
         let replyingToGeral = null;
         let replyingToPrivado = null;
         let mediaRecorder, audioChunks = [];
+        let filtroContatoAtual = "meus"; // NOVO: Controle da aba de contatos
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
@@ -564,12 +576,26 @@
             } catch (e) { console.error("Erro ao editar:", e); }
         };
 
+        // NOVO: Função para alterar entre a aba de Meus Contatos e Explorar
+        window.mudarFiltroContatos = (tipo) => {
+            filtroContatoAtual = tipo;
+            document.getElementById('btn-meus-contatos').classList.toggle('ativo', tipo === 'meus');
+            document.getElementById('btn-explorar-contatos').classList.toggle('ativo', tipo === 'todos');
+            ouvirUsuarios(); // Recarrega a lista com o filtro novo
+        };
+
+        // NOVO: Função melhorada de Seguir/Adicionar Contato
         window.toggleSeguir = async (idOutro, event) => {
             if (event) event.stopPropagation();
             try {
                 const ref = doc(db, "usuarios", meuNome);
-                if (meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } 
-                else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); }
+                if (meusSeguindo.includes(idOutro)) { 
+                    await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); 
+                    alert(`${idOutro} removido dos seus contatos.`);
+                } else { 
+                    await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); 
+                    alert(`${idOutro} adicionado aos seus contatos!`);
+                }
             } catch (e) { console.error("Erro ao seguir:", e); }
         };
 
@@ -615,6 +641,9 @@
                     document.getElementById('bioInput').value = dados.bio || "";
                     document.getElementById('tagInput').value = minhaTag;
                     document.getElementById('num-seguindo').innerText = meusSeguindo.length;
+                    
+                    // Se estiver na aba de contatos, atualiza a tela para sumir/aparecer o contato na hora
+                    if(abaAtiva === "users") ouvirUsuarios();
                 }
             });
             onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => document.getElementById('num-seguidores').innerText = snap.size);
@@ -684,14 +713,20 @@
 
         window.filtrarUsuarios = () => { const b = document.getElementById('buscaUsuario').value.toLowerCase(); document.querySelectorAll('.user-card').forEach(c => c.classList.toggle('hidden', !c.getAttribute('data-nome').toLowerCase().includes(b))); };
 
+        // NOVO: Função de listar os usuários atualizada para usar a aba "Meus Contatos" e "Todos"
         function ouvirUsuarios() {
             onSnapshot(collection(db, "usuarios"), (snap) => {
                 const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
-                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id);
+                        const d = u.data(); 
+                        const taSeguindo = meusSeguindo.includes(u.id);
+                        
+                        // Filtro: Se estiver na aba "Meus", e não estiver seguindo a pessoa, pula ela e nem mostra.
+                        if (filtroContatoAtual === "meus" && !taSeguindo) return;
+
                         let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || '#00ff88'}">${d.tag}</span>` : "";
-                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>${badgeTag}<div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Seguindo' : 'Seguir'}</button></div>`;
+                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>${badgeTag}<div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Remover' : 'Adicionar'}</button></div>`;
                     }
                 });
             });
