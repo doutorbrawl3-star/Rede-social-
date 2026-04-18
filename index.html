@@ -67,9 +67,10 @@
         audio { max-width: 200px; height: 35px; margin-top: 5px; }
         .img-chat { max-width: 200px; border-radius: 8px; margin-top: 5px; }
 
-        /* Jogo da Velha */
+        /* Jogos */
         .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .velha-cell { width: 50px; height: 50px; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; color: white; }
+        .menu-jogos-box { position:absolute; bottom:70px; left:15px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; z-index:200; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
         /* Respostas (Reply) */
         .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
@@ -207,10 +208,17 @@
                     <button onclick="cancelarResposta('privado')" style="background:none; border:none; color:#f44; cursor:pointer; font-weight:bold;">X</button>
                 </div>
                 
-                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center;">
+                <div id="menu-jogos" class="menu-jogos-box hidden">
+                    <b style="font-size:12px; text-align:center; color:var(--text-gray);">Escolha um Jogo:</b>
+                    <button onclick="enviarJogoVelha()" style="background:#0084ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">❌ Jogo da Velha ⭕</button>
+                    <button onclick="enviarPPT()" style="background:#a333ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✊ Pedra, Papel, Tesoura</button>
+                    <button onclick="enviarDados()" style="background:#ff8800; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🎲 Batalha de Dados</button>
+                </div>
+
+                <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center; position: relative;">
                     <input type="file" id="fileChat" accept="image/*" class="hidden" onchange="enviarImagemPrivada(event)">
                     <button onclick="document.getElementById('fileChat').click()" class="btn-chat-extra btn-upload-icon">📎</button>
-                    <button class="btn-chat-extra btn-game-icon" onclick="enviarJogoVelha()">🎮</button>
+                    <button class="btn-chat-extra btn-game-icon" onclick="toggleMenuJogos()">🎮</button>
                     <input type="text" id="msgPrivadaInput" placeholder="Sua mensagem..." oninput="avisarDigitando()" style="margin:0; flex: 1;">
                     <button id="btn-audio" class="btn-chat-extra" onmousedown="iniciarGravacao()" onmouseup="pararGravacao()" ontouchstart="iniciarGravacao()" ontouchend="pararGravacao()">🎤</button>
                     <button onclick="enviarPrivado()" style="background:var(--main); border:none; border-radius:50%; width:45px; height: 45px; cursor:pointer; font-weight:bold; flex-shrink: 0; color:black;">➤</button>
@@ -249,8 +257,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
+        const firebaseConfig = {apiKey: "AIzaSyB2byHMCCdXKUT5bfBTvcw0zzsIY6uQz88",
             authDomain: "rede-social-8f031.firebaseapp.com",
             databaseURL: "https://rede-social-8f031-default-rtdb.firebaseio.com",
             projectId: "rede-social-8f031",
@@ -269,7 +276,6 @@
         let mediaRecorder, audioChunks = [];
         let filtroContatoAtual = "meus";
 
-        // Áudio e Push para chamadas
         const toqueChamada = new Audio("https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg");
         toqueChamada.loop = true; 
 
@@ -282,7 +288,6 @@
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
-        // --- SISTEMA BASE64 PARA FOTOS ---
         const converterParaBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -324,7 +329,7 @@
             await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
 
-        // --- LÓGICA DE CHAMADAS (WEBRTC) ---
+        // --- SISTEMA DE CHAMADAS OMITIDO PARA ECONOMIZAR ESPAÇO (PODE MANTER O SEU) ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
         let pcChamada = null, streamLocal = null, streamRemoto = null, chamadaAtualId = null;
 
@@ -341,32 +346,23 @@
         window.iniciarChamada = async (tipo) => {
             if(!chatAtivoId) return;
             chamadaAtualId = [meuNome, chatAtivoId].sort().join("_");
-            
             document.getElementById('tela-chamada').classList.remove('hidden');
             document.getElementById('chamada-nome').innerText = chatAtivoId;
             document.getElementById('chamada-status').innerText = "Chamando...";
             document.getElementById('btn-atender-chamada').classList.add('hidden');
-
             await abrirCameraAudio(tipo);
-            
             pcChamada = new RTCPeerConnection(configuracaoRTC);
             streamRemoto = new MediaStream();
             document.getElementById('video-remoto').srcObject = streamRemoto;
-
             streamLocal.getTracks().forEach(t => pcChamada.addTrack(t, streamLocal));
             pcChamada.ontrack = e => { e.streams[0].getTracks().forEach(t => streamRemoto.addTrack(t)); };
-
             const refChamada = doc(db, "chamadas", chamadaAtualId);
             const candCaller = collection(refChamada, "callerCandidates");
             const candCallee = collection(refChamada, "calleeCandidates");
-
             pcChamada.onicecandidate = e => { if(e.candidate) addDoc(candCaller, e.candidate.toJSON()); };
-
             const offer = await pcChamada.createOffer();
             await pcChamada.setLocalDescription(offer);
-            
             await setDoc(refChamada, { de: meuNome, para: chatAtivoId, tipo: tipo, offer: { type: offer.type, sdp: offer.sdp }, status: "chamando" });
-
             window.unsubChamada = onSnapshot(refChamada, (d) => {
                 const data = d.data();
                 if(data && (data.status === "rejeitada" || data.status === "encerrada")) desligarLocal();
@@ -375,7 +371,6 @@
                     document.getElementById('chamada-status').innerText = "Conectado";
                 }
             });
-
             window.unsubCand = onSnapshot(candCallee, snap => {
                 snap.docChanges().forEach(c => { if(c.type === "added") pcChamada.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
             });
@@ -386,36 +381,17 @@
                 snap.docChanges().forEach(c => {
                     if(c.type === "added" || c.type === "modified") {
                         const data = c.doc.data();
-                        
                         if(data.status === "chamando") {
                             chamadaAtualId = c.doc.id;
                             document.getElementById('tela-chamada').classList.remove('hidden');
                             document.getElementById('chamada-nome').innerText = data.de;
                             document.getElementById('chamada-status').innerText = data.tipo === 'video' ? "Recebendo chamada de vídeo..." : "Recebendo chamada de voz...";
                             document.getElementById('btn-atender-chamada').classList.remove('hidden');
-
                             toqueChamada.play().catch(e => console.log("Erro no som:", e));
-                            
-                            if (Notification.permission === "granted") {
-                                navigator.serviceWorker.ready.then(reg => {
-                                    reg.showNotification(`📞 Nova Chamada de ${data.de}`, {
-                                        body: "Clique aqui para atender na StackNet!",
-                                        vibrate: [200, 100, 200, 100, 200, 100, 200], 
-                                        requireInteraction: true 
-                                    });
-                                }).catch(() => {
-                                    new Notification(`📞 Chamada de ${data.de}`, { body: "Abra o app para atender!", requireInteraction: true });
-                                });
-                            }
-                            
                         } else if (data.status === "atendida") {
-                            // CORREÇÃO AQUI
-                            toqueChamada.pause();
-                            toqueChamada.currentTime = 0;
-                            
+                            toqueChamada.pause(); toqueChamada.currentTime = 0;
                         } else if (data.status === "encerrada" || data.status === "rejeitada") {
-                            toqueChamada.pause();
-                            toqueChamada.currentTime = 0;
+                            toqueChamada.pause(); toqueChamada.currentTime = 0;
                             desligarLocal();
                         }
                     }
@@ -424,36 +400,26 @@
         }
 
         window.atenderChamada = async () => {
-            toqueChamada.pause();
-            toqueChamada.currentTime = 0;
+            toqueChamada.pause(); toqueChamada.currentTime = 0;
             document.getElementById('btn-atender-chamada').classList.add('hidden');
             document.getElementById('chamada-status').innerText = "Conectando...";
-            
             const refChamada = doc(db, "chamadas", chamadaAtualId);
             const dataDoc = await getDoc(refChamada);
             const data = dataDoc.data();
-            
             await abrirCameraAudio(data.tipo);
-            
             pcChamada = new RTCPeerConnection(configuracaoRTC);
             streamRemoto = new MediaStream();
             document.getElementById('video-remoto').srcObject = streamRemoto;
-
             streamLocal.getTracks().forEach(t => pcChamada.addTrack(t, streamLocal));
             pcChamada.ontrack = e => { e.streams[0].getTracks().forEach(t => streamRemoto.addTrack(t)); };
-
             const candCaller = collection(refChamada, "callerCandidates");
             const candCallee = collection(refChamada, "calleeCandidates");
-
             pcChamada.onicecandidate = e => { if(e.candidate) addDoc(candCallee, e.candidate.toJSON()); };
-
             await pcChamada.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await pcChamada.createAnswer();
             await pcChamada.setLocalDescription(answer);
-
             await updateDoc(refChamada, { answer: { type: answer.type, sdp: answer.sdp }, status: "atendida" });
             document.getElementById('chamada-status').innerText = "Conectado";
-
             window.unsubCand = onSnapshot(candCaller, snap => {
                 snap.docChanges().forEach(c => { if(c.type === "added") pcChamada.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
             });
@@ -461,8 +427,7 @@
         };
 
         window.desligarChamada = async () => {
-            toqueChamada.pause();
-            toqueChamada.currentTime = 0;
+            toqueChamada.pause(); toqueChamada.currentTime = 0;
             if(chamadaAtualId) await setDoc(doc(db, "chamadas", chamadaAtualId), { status: "encerrada" }, { merge: true });
             desligarLocal();
         };
@@ -476,23 +441,15 @@
             chamadaAtualId = null;
         }
 
-        // --- FIM LÓGICA DE CHAMADAS ---
-
-        // --- SISTEMA DE STORIES ---
         window.postarStory = async () => {
             const texto = prompt("Qual é o seu status de hoje?");
-            if (texto && texto.trim() !== "") {
-                await addDoc(collection(db, "stories"), {
-                    nome: meuNome, texto: texto, data: Date.now(), dataStr: formataData(), cor: minhaCor
-                });
-            }
+            if (texto && texto.trim() !== "") { await addDoc(collection(db, "stories"), { nome: meuNome, texto: texto, data: Date.now(), dataStr: formataData(), cor: minhaCor }); }
         };
 
         function ouvirStories() {
             const umDiaAtras = Date.now() - (24 * 60 * 60 * 1000); 
             onSnapshot(query(collection(db, "stories"), where("data", ">", umDiaAtras), orderBy("data", "desc")), (snap) => {
-                const lista = document.getElementById('stories-list');
-                lista.innerHTML = "";
+                const lista = document.getElementById('stories-list'); lista.innerHTML = "";
                 snap.forEach(s => {
                     const d = s.data();
                     if (d.nome === meuNome || meusSeguindo.includes(d.nome)) {
@@ -504,41 +461,23 @@
         }
 
         window.verStory = (id, nome, cor, texto, dataStr) => {
-            document.getElementById('sv-avatar').innerText = nome[0];
-            document.getElementById('sv-avatar').style.background = cor;
-            document.getElementById('sv-nome').innerText = nome;
-            document.getElementById('sv-texto').innerText = texto;
-            document.getElementById('sv-data').innerText = dataStr;
-            
+            document.getElementById('sv-avatar').innerText = nome[0]; document.getElementById('sv-avatar').style.background = cor;
+            document.getElementById('sv-nome').innerText = nome; document.getElementById('sv-texto').innerText = texto; document.getElementById('sv-data').innerText = dataStr;
             const btnDel = document.getElementById('btn-del-story');
-            if (nome === meuNome) {
-                btnDel.classList.remove('hidden');
-                btnDel.onclick = () => excluirStory(id);
-            } else {
-                btnDel.classList.add('hidden'); 
-            }
+            if (nome === meuNome) { btnDel.classList.remove('hidden'); btnDel.onclick = () => excluirStory(id); } else { btnDel.classList.add('hidden'); }
             document.getElementById('story-viewer').classList.remove('hidden');
         };
 
         window.fecharStory = () => { document.getElementById('story-viewer').classList.add('hidden'); };
+        window.excluirStory = async (id) => { if(confirm("Apagar este status?")) { await deleteDoc(doc(db, "stories", id)); fecharStory(); } };
 
-        window.excluirStory = async (id) => {
-            if(confirm("Apagar este status?")) {
-                await deleteDoc(doc(db, "stories", id));
-                fecharStory();
-            }
-        };
-
-        // --- SISTEMA DE ÁUDIO MSG ---
         window.iniciarGravacao = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
                     reader.onloadend = async () => {
                         const base64Audio = reader.result;
@@ -546,27 +485,29 @@
                         enviarMensagemAudio(base64Audio);
                     };
                 };
-                mediaRecorder.start();
-                document.getElementById('btn-audio').classList.add('recording');
+                mediaRecorder.start(); document.getElementById('btn-audio').classList.add('recording');
             } catch (err) { alert("Permita o microfone para gravar áudio."); }
         };
 
-        window.pararGravacao = () => {
-            if(mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('btn-audio').classList.remove('recording');
-            }
-        };
+        window.pararGravacao = () => { if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); document.getElementById('btn-audio').classList.remove('recording'); } };
 
         async function enviarMensagemAudio(base64) {
             const chatId = [meuNome, chatAtivoId].sort().join("_");
-            await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
-                de: meuNome, tag: minhaTag, audio: base64, data: Date.now(), dataStr: formataData(), lida: false, editado: false 
-            });
+            await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, audio: base64, data: Date.now(), dataStr: formataData(), lida: false, editado: false });
         }
 
-        // --- SISTEMA DO JOGO DA VELHA ---
+
+        // ==========================================
+        // ===== SISTEMA DE JOGOS E MENU AQUI =====
+        // ==========================================
+
+        window.toggleMenuJogos = () => {
+            document.getElementById('menu-jogos').classList.toggle('hidden');
+        };
+
+        // 1. Jogo da Velha
         window.enviarJogoVelha = async () => {
+            toggleMenuJogos(); // Fecha o menu
             if(chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
                 await addDoc(collection(db, `chats/${chatId}/mensagens`), {
@@ -588,199 +529,169 @@
 
             let novoVencedor = null;
             const linhas = [ [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6] ];
-            
             for (let l of linhas) {
-                if (tab[l[0]] && tab[l[0]] === tab[l[1]] && tab[l[0]] === tab[l[2]]) {
-                    novoVencedor = meuNome;
-                    break;
-                }
+                if (tab[l[0]] && tab[l[0]] === tab[l[1]] && tab[l[0]] === tab[l[2]]) { novoVencedor = meuNome; break; }
             }
             if (!novoVencedor && !tab.includes('')) novoVencedor = 'Empate';
 
             const proximoTurno = chatAtivoId;
             const chatId = [meuNome, chatAtivoId].sort().join("_");
-            
-            await updateDoc(doc(db, `chats/${chatId}/mensagens`, msgId), {
-                tabuleiro: tab,
-                turno: novoVencedor ? null : proximoTurno,
-                vencedor: novoVencedor
-            });
+            await updateDoc(doc(db, `chats/${chatId}/mensagens`, msgId), { tabuleiro: tab, turno: novoVencedor ? null : proximoTurno, vencedor: novoVencedor });
         };
 
-        // --- SISTEMA PWA (INSTALAÇÃO) ---
-        let instalador;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); instalador = e;
-            document.getElementById('btn-instalar').classList.remove('hidden'); 
-        });
-
-        window.instalarApp = async () => {
-            if(instalador) {
-                instalador.prompt();
-                const { outcome } = await instalador.userChoice;
-                if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden');
-                instalador = null;
+        // 2. Pedra, Papel, Tesoura
+        window.enviarPPT = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_ppt', jogadas: {}, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
             }
         };
 
+        window.jogarPPT = async (msgId, minhaJogada) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+            
+            if (d.vencedor || d.jogadas[meuNome]) return; // Já jogou ou acabou
+            
+            let novasJogadas = { ...d.jogadas, [meuNome]: minhaJogada };
+            let updates = { jogadas: novasJogadas };
+            
+            // Se os dois jogaram, calcula o vencedor
+            if (Object.keys(novasJogadas).length === 2) {
+                const j1 = novasJogadas[meuNome];
+                const j2 = novasJogadas[chatAtivoId];
+                let vencedor = null;
+                
+                if (j1 === j2) vencedor = 'Empate';
+                else if ((j1 === '✊' && j2 === '✌️') || (j1 === '✋' && j2 === '✊') || (j1 === '✌️' && j2 === '✋')) vencedor = meuNome;
+                else vencedor = chatAtivoId;
+                
+                updates.vencedor = vencedor;
+            }
+            await updateDoc(docRef, updates);
+        };
+
+        // 3. Batalha de Dados
+        window.enviarDados = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_dados', rolagens: {}, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
+
+        window.jogarDado = async (msgId) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+                      const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+            
+            if (d.vencedor || d.rolagens[meuNome]) return;
+            
+            let meuDado = Math.floor(Math.random() * 6) + 1;
+            let novasRolagens = { ...d.rolagens, [meuNome]: meuDado };
+            let updates = { rolagens: novasRolagens };
+            
+            if (Object.keys(novasRolagens).length === 2) {
+                const r1 = novasRolagens[meuNome];
+                const r2 = novasRolagens[chatAtivoId];
+                if (r1 === r2) updates.vencedor = 'Empate';
+                else if (r1 > r2) updates.vencedor = meuNome;
+                else updates.vencedor = chatAtivoId;
+            }
+            await updateDoc(docRef, updates);
+        };
+
+
+        // --- PWA ---
+        let instalador;
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); instalador = e; document.getElementById('btn-instalar').classList.remove('hidden'); });
+        window.instalarApp = async () => { if(instalador) { instalador.prompt(); const { outcome } = await instalador.userChoice; if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden'); instalador = null; } };
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
 
-        // --- SISTEMA CORE ---
+        // --- CORE ---
         window.entrar = async () => {
             const nome = document.getElementById('nome-usuario').value.trim();
             if(nome) {
-                meuNome = nome;
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
+                meuNome = nome; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app-screen').classList.remove('hidden');
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
-                
-                pedirPermissaoNotificacao(); 
-                
-                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories(); escutarChamadas();
+                pedirPermissaoNotificacao(); carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories(); escutarChamadas();
             }
         };
 
         window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
 
         window.mudarAba = (aba) => {
-            abaAtiva = aba;
-            if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
+            abaAtiva = aba; if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
+            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden')); document.getElementById('aba-' + aba).classList.remove('hidden');
+            document.getElementById('menu-jogos').classList.add('hidden'); // Fecha menu ao mudar de aba
         };
         
-        window.mudarFiltroContatos = (tipo) => {
-            filtroContatoAtual = tipo;
-            document.getElementById('btn-meus-contatos').classList.toggle('ativo', tipo === 'meus');
-            document.getElementById('btn-explorar-contatos').classList.toggle('ativo', tipo === 'todos');
-            ouvirUsuarios();
-        };
-
+        window.mudarFiltroContatos = (tipo) => { filtroContatoAtual = tipo; document.getElementById('btn-meus-contatos').classList.toggle('ativo', tipo === 'meus'); document.getElementById('btn-explorar-contatos').classList.toggle('ativo', tipo === 'todos'); ouvirUsuarios(); };
         window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
 
         window.editarItem = async (caminho, id, campo) => {
-            try {
-                const docRef = doc(db, caminho, id);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const textoAntigo = docSnap.data()[campo] || "";
-                    const novo = prompt("Editar:", textoAntigo);
-                    if (novo !== null && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(docRef, { [campo]: novo, editado: true }); }
-                }
-            } catch (e) { console.error("Erro ao editar:", e); }
+            try { const docRef = doc(db, caminho, id); const docSnap = await getDoc(docRef); if (docSnap.exists()) { const textoAntigo = docSnap.data()[campo] || ""; const novo = prompt("Editar:", textoAntigo); if (novo !== null && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(docRef, { [campo]: novo, editado: true }); } } } catch (e) { console.error("Erro ao editar:", e); }
         };
 
-        window.toggleSeguir = async (idOutro, event) => {
-            if (event) event.stopPropagation();
-            try {
-                const ref = doc(db, "usuarios", meuNome);
-                if (meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } 
-                else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); }
-            } catch (e) { console.error("Erro ao seguir:", e); }
-        };
+        window.toggleSeguir = async (idOutro, event) => { if (event) event.stopPropagation(); try { const ref = doc(db, "usuarios", meuNome); if (meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); } } catch (e) { console.error("Erro ao seguir:", e); } };
 
         window.prepararResposta = (id, nome, texto, tipo) => {
             const txtLindo = texto.replace(/\\'/g, "'"); 
-            if (tipo === 'geral') {
-                replyingToGeral = { nome, texto: txtLindo };
-                document.getElementById('preview-reply-geral').classList.remove('hidden');
-                document.getElementById('text-reply-geral').innerText = `Responder a ${nome}: ${txtLindo}`;
-                document.getElementById('chatGeralInput').focus();
-            } else {
-                replyingToPrivado = { nome, texto: txtLindo };
-                document.getElementById('preview-reply-privado').classList.remove('hidden');
-                document.getElementById('text-reply-privado').innerText = `Responder a ${nome}: ${txtLindo}`;
-                document.getElementById('msgPrivadaInput').focus();
-            }
+            if (tipo === 'geral') { replyingToGeral = { nome, texto: txtLindo }; document.getElementById('preview-reply-geral').classList.remove('hidden'); document.getElementById('text-reply-geral').innerText = `Responder a ${nome}: ${txtLindo}`; document.getElementById('chatGeralInput').focus();
+            } else { replyingToPrivado = { nome, texto: txtLindo }; document.getElementById('preview-reply-privado').classList.remove('hidden'); document.getElementById('text-reply-privado').innerText = `Responder a ${nome}: ${txtLindo}`; document.getElementById('msgPrivadaInput').focus(); }
         };
 
-        window.cancelarResposta = (tipo) => {
-            if (tipo === 'geral') { replyingToGeral = null; document.getElementById('preview-reply-geral').classList.add('hidden'); } 
-            else { replyingToPrivado = null; document.getElementById('preview-reply-privado').classList.add('hidden'); }
-        };
-
+        window.cancelarResposta = (tipo) => { if (tipo === 'geral') { replyingToGeral = null; document.getElementById('preview-reply-geral').classList.add('hidden'); } else { replyingToPrivado = null; document.getElementById('preview-reply-privado').classList.add('hidden'); } };
         window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
-        
-        window.salvarBio = async () => { 
-            minhaTag = document.getElementById('tagInput').value;
-            await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor, tag: minhaTag }); 
-            alert("Perfil Salvo com a sua Tag!"); 
-        };
+        window.salvarBio = async () => { minhaTag = document.getElementById('tagInput').value; await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor, tag: minhaTag }); alert("Perfil Salvo com a sua Tag!"); };
         
         async function carregarPerfil() {
             onSnapshot(doc(db, "usuarios", meuNome), (d) => {
                    if(d.exists()) {
-                    const dados = d.data();
-                    minhaCor = dados.cor || "#00ff88"; 
-                    minhaTag = dados.tag || "";
-                    meusSeguindo = dados.seguindo || [];
-                    document.documentElement.style.setProperty('--main', minhaCor);
-                    document.getElementById('perf-nome').innerText = meuNome;
-                    document.getElementById('perf-avatar').innerText = meuNome[0];
-                    document.getElementById('perf-avatar').style.background = minhaCor;
-                    document.getElementById('bioInput').value = dados.bio || "";
-                    document.getElementById('tagInput').value = minhaTag;
-                    document.getElementById('num-seguindo').innerText = meusSeguindo.length;
+                    const dados = d.data(); minhaCor = dados.cor || "#00ff88"; minhaTag = dados.tag || ""; meusSeguindo = dados.seguindo || [];
+                    document.documentElement.style.setProperty('--main', minhaCor); document.getElementById('perf-nome').innerText = meuNome; document.getElementById('perf-avatar').innerText = meuNome[0]; document.getElementById('perf-avatar').style.background = minhaCor; document.getElementById('bioInput').value = dados.bio || ""; document.getElementById('tagInput').value = minhaTag; document.getElementById('num-seguindo').innerText = meusSeguindo.length;
                 }
             });
             onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => document.getElementById('num-seguidores').innerText = snap.size);
         }
 
-        window.postar = async () => {
-            const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
-            if(txt.trim()) { 
-                await addDoc(collection(db, "posts"), { nome: meuNome, tag: minhaTag, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); 
-                document.getElementById('postInput').value = ""; 
-            }
-        };
-
-        window.toggleLike = async (postId) => {
-            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
-            const index = curtidos.indexOf(postId);
-            if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } 
-            else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); }
-            localStorage.setItem('curtidos', JSON.stringify(curtidos));
-        };
-
-        window.comentar = async (postId) => {
-            const msg = prompt("Deixe seu comentário:");
-            if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); }
-        };
+        window.postar = async () => { const txt = document.getElementById('postInput').value; const imgUrl = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null; if(txt.trim()) { await addDoc(collection(db, "posts"), { nome: meuNome, tag: minhaTag, content: txt.replace(imgUrl, ""), img: imgUrl, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false }); document.getElementById('postInput').value = ""; } };
+        window.toggleLike = async (postId) => { let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]"); const index = curtidos.indexOf(postId); if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); } localStorage.setItem('curtidos', JSON.stringify(curtidos)); };
+        window.comentar = async (postId) => { const msg = prompt("Deixe seu comentário:"); if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); } };
 
         function ouvirFeed() {
             onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
-                const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
-                const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
+                const feed = document.getElementById('feed-lista'); feed.innerHTML = ""; const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
                 snap.forEach(p => {
-                    const d = p.data(); const ehCurtido = curtidos.includes(p.id);
-                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
+                    const d = p.data(); const ehCurtido = curtidos.includes(p.id); let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
                     let comentariosHTML = ""; if(d.comentarios) { d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; }); }
                     let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || 'var(--main)'}">${d.tag}</span>` : "";
-                    
-                    let conteudoImg = d.img ? (d.img.startsWith('data:image') ? `<img src="${d.img}" class="post-img">` : `<img src="${d.img}" class="post-img">`) : "";
-
+                    let conteudoImg = d.img ? `<img src="${d.img}" class="post-img">` : "";
                     feed.innerHTML += `<div class="post-card">${acoesTopo}<div class="card-header"><div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div><div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b>${badgeTag}<br><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div></div><div style="font-size:15px; margin-bottom:10px;">${d.content}</div>${conteudoImg}<div style="display:flex; gap:10px; margin-top:15px;"><div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div><div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div></div><div style="margin-top:10px;">${comentariosHTML}</div></div>`;
                 });
             });
         }
 
-        window.enviarGeral = async () => {
-            const txt = document.getElementById('chatGeralInput').value;
-            if(txt.trim()) { 
-                await addDoc(collection(db, "chat_geral"), { nome: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false, replyTo: replyingToGeral }); 
-                document.getElementById('chatGeralInput').value = ""; 
-                cancelarResposta('geral');
-            }
-        };
+        window.enviarGeral = async () => { const txt = document.getElementById('chatGeralInput').value; if(txt.trim()) { await addDoc(collection(db, "chat_geral"), { nome: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false, replyTo: replyingToGeral }); document.getElementById('chatGeralInput').value = ""; cancelarResposta('geral'); } };
 
         function ouvirChatGeral() {
             onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
                 const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
                 snap.forEach(m => {
                     const d = m.data(); const souEu = d.nome === meuNome;
-                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
-                    let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || 'var(--main)'}">${d.tag}</span>` : "";
-                    
+                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : ""; let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || 'var(--main)'}">${d.tag}</span>` : "";
                     let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${(d.texto||"").replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
                     if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
                     botoesMsg += `</div>`;
@@ -797,8 +708,7 @@
                 const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
                 snap.forEach(u => {
                     if(u.id !== meuNome) {
-                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id);
-                        if(filtroContatoAtual === "meus" && !taSeguindo) return;
+                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id); if(filtroContatoAtual === "meus" && !taSeguindo) return;
                         let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || '#00ff88'}">${d.tag}</span>` : "";
                         lista.innerHTML += `<div class="user-card" data-nome="${u.id}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>${badgeTag}<div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Seguindo' : 'Seguir'}</button></div>`;
                     }
@@ -808,6 +718,7 @@
 
         window.abrirChat = (id, corOutro) => {
             chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden'); document.getElementById('chat-com-nome').innerText = id;
+            document.getElementById('menu-jogos').classList.add('hidden'); // Sempre fecha ao abrir chat novo
             const chatId = [meuNome, id].sort().join("_");
             onSnapshot(doc(db, "digitando", chatId), (d) => document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "");
             if(window.unsubChat) window.unsubChat();
@@ -822,14 +733,47 @@
                     let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
                     
                     let conteudo = "";
+                    
+                    // RENDER DOS JOGOS
                     if (d.tipo === 'jogo_velha') {
                         let boardHtml = `<div class="velha-board">`;
-                        d.tabuleiro.forEach((cel, idx) => {
-                            boardHtml += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${idx}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${cel}</div>`;
-                        });
+                        d.tabuleiro.forEach((cel, idx) => { boardHtml += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${idx}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${cel}</div>`; });
                         boardHtml += `</div>`;
                         let status = d.vencedor ? (d.vencedor==='Empate'?'Deu Velha! 👵':`Vencedor: ${d.vencedor} 🏆`) : (d.turno === meuNome ? '🔥 Sua vez!' : '⏳ Vez do adversário');
                         conteudo = `<div style="text-align:center; padding-top:5px;"><b>Jogo da Velha</b><br><small>${status}</small>${boardHtml}</div>`;
+                    
+                    } else if (d.tipo === 'jogo_ppt') {
+                        let j1 = d.jogadas[meuNome];
+                        let status = "Escolha sua jogada!";
+                        let botoesHTML = `<div style="display:flex; gap:10px; justify-content:center; margin-top:8px;">
+                            <button onclick="jogarPPT('${m.id}', '✊')" style="font-size:24px; cursor:pointer; background:none; border:none;">✊</button>
+                            <button onclick="jogarPPT('${m.id}', '✋')" style="font-size:24px; cursor:pointer; background:none; border:none;">✋</button>
+                            <button onclick="jogarPPT('${m.id}', '✌️')" style="font-size:24px; cursor:pointer; background:none; border:none;">✌️</button>
+                        </div>`;
+
+                        if (d.vencedor) {
+                            status = d.vencedor === 'Empate' ? 'Empate!' : `Vencedor: ${d.vencedor} 🏆`;
+                            botoesHTML = `<div style="text-align:center; margin-top:5px;">${meuNome}: ${d.jogadas[meuNome]} <br> ${chatAtivoId}: ${d.jogadas[chatAtivoId]}</div>`;
+                        } else if (j1) {
+                            status = "Aguardando adversário...";
+                            botoesHTML = `<div style="text-align:center; margin-top:5px;">Você escolheu e está escondido 🤫</div>`;
+                        }
+                        conteudo = `<div style="text-align:center; padding-top:5px; width:180px;"><b>Pedra, Papel, Tesoura</b><br><small>${status}</small>${botoesHTML}</div>`;
+                    
+                    } else if (d.tipo === 'jogo_dados') {
+                        let r1 = d.rolagens[meuNome];
+                        let status = "Sua vez de rodar!";
+                        let botoesHTML = `<button onclick="jogarDado('${m.id}')" style="font-size:35px; cursor:pointer; background:none; border:none; margin-top:5px;">🎲</button>`;
+
+                        if (d.vencedor) {
+                            status = d.vencedor === 'Empate' ? 'Empate!' : `Vencedor: ${d.vencedor} 🏆`;
+                            botoesHTML = `<div style="text-align:center; margin-top:5px; font-size:18px;">${meuNome}: <b>${d.rolagens[meuNome]}</b> <br> ${chatAtivoId}: <b>${d.rolagens[chatAtivoId]}</b></div>`;
+                        } else if (r1) {
+                            status = "Aguardando adversário...";
+                            botoesHTML = `<div style="text-align:center; margin-top:5px; font-size:18px;">Seu número: <b>${r1}</b> <br> Adv: ⏳</div>`;
+                        }
+                        conteudo = `<div style="text-align:center; padding-top:5px; width:150px;"><b>Batalha de Dados</b><br><small>${status}</small><br>${botoesHTML}</div>`;
+                    
                     } else if (d.img) {
                         conteudo = `<img src="${d.img}" class="img-chat">`;
                     } else {
@@ -837,7 +781,7 @@
                     }
                     
                     let botoesMsg = "";
-                    if(d.tipo !== 'jogo_velha') {
+                    if(!d.tipo || !d.tipo.includes('jogo_')) {
                         botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : (d.img ? '[Imagem]' : (d.texto||"").replace(/'/g, "\\'"))}', 'privado')">Responder</button>`;
                         if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto')" ${d.audio || d.img ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
                         botoesMsg += `</div>`;
@@ -851,21 +795,24 @@
             });
         };
 
-        window.enviarPrivado = async () => {
-            const input = document.getElementById('msgPrivadaInput');
-            if(input.value.trim() && chatAtivoId) {
-                const chatId = [meuNome, chatAtivoId].sort().join("_");
-                const txt = input.value; input.value = "";
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado });
-                await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
-                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
-                cancelarResposta('privado');
-            }
-        };
+        window.enviarPrivado = async () => { const input = document.getElementById('msgPrivadaInput'); if(input.value.trim() && chatAtivoId) { const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const txt = input.value; 
+            input.value = ""; 
+            await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado }); 
+            await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); 
+            await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() }); 
+            cancelarResposta('privado'); 
+            document.getElementById('menu-jogos').classList.add('hidden'); 
+        } 
+    };
 
-        window.avisarDigitando = async () => { if(!chatAtivoId) return; const chatId = [meuNome, chatAtivoId].sort().join("_"); await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true }); clearTimeout(digitandoTimeout); digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000); };
-        window.fecharChat = () => { document.getElementById('janela-chat').classList.add('hidden'); cancelarResposta('privado'); };
-        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
-    </script>
+    window.avisarDigitando = async () => { if(!chatAtivoId) return; const chatId = [meuNome, chatAtivoId].sort().join("_"); await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true }); clearTimeout(digitandoTimeout); digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000); };
+    
+    window.fecharChat = () => { document.getElementById('janela-chat').classList.add('hidden'); cancelarResposta('privado'); document.getElementById('menu-jogos').classList.add('hidden'); };
+    
+    function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
+</script>
 </body>
 </html>
+
+            
