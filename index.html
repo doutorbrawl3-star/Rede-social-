@@ -257,6 +257,8 @@
         </div>
     </div>
 
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc, increment, getDoc, where, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -276,80 +278,49 @@
 
         let meuNome = "", chatAtivoId = "", minhaCor = "#00ff88", minhaTag = "", abaAtiva = "feed", digitandoTimeout;
         let meusSeguindo = []; 
-        let filtroUsuariosAtual = 'explorar'; // Variável da nova aba
-        let replyingToGeral = null;
-        let replyingToPrivado = null;
+        let replyingToGeral = null, replyingToPrivado = null;
         let mediaRecorder, audioChunks = [];
-        let base64FeedAtual = null;
-
-        // --- FUNÇÃO PARA COMPRIMIR E CONVERTER IMAGEM PARA BASE64 ---
-        window.processImageToBase64 = (file, callback) => {
-            if(!file) return;
-            document.getElementById('loading-overlay').classList.remove('hidden'); 
-            
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800; 
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                    } else {
-                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    const base64Str = canvas.toDataURL('image/jpeg', 0.7); 
-                    document.getElementById('loading-overlay').classList.add('hidden'); 
-                    callback(base64Str);
-                };
-            };
-        };
+        let filtroContatoAtual = "meus";
+        const toqueChamada = new Audio("https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg");
+        toqueChamada.loop = true;
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
-        // --- LÓGICA DE FOTOS NO FEED ---
-        window.processarImgFeed = (input) => {
-            processImageToBase64(input.files[0], (base64) => {
-                base64FeedAtual = base64;
-                document.getElementById('feed-img-src').src = base64;
-                document.getElementById('feed-img-preview').classList.remove('hidden');
-                input.value = ""; 
+        // --- CONVERSOR DE IMAGEM (BASE64) ---
+        const converterParaBase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        window.postarComImagem = async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('upload-overlay').classList.remove('hidden');
+            const base64 = await converterParaBase64(file);
+            await addDoc(collection(db, "posts"), { 
+                nome: meuNome, tag: minhaTag, content: document.getElementById('postInput').value, 
+                img: base64, data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false 
             });
+            document.getElementById('upload-overlay').classList.add('hidden');
+            document.getElementById('postInput').value = "";
         };
 
-        window.removerImgFeed = () => {
-            base64FeedAtual = null;
-            document.getElementById('feed-img-preview').classList.add('hidden');
-            document.getElementById('feed-img-src').src = "";
-        };
-
-        // --- LÓGICA DE FOTOS NO CHAT PRIVADO ---
-        window.processarImgChat = (input) => {
-            processImageToBase64(input.files[0], async (base64) => {
-                if(chatAtivoId) {
-                    const chatId = [meuNome, chatAtivoId].sort().join("_");
-                    await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
-                        de: meuNome, tag: minhaTag, texto: "", img: base64, data: Date.now(), 
-                        dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado 
-                    });
-                    await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
-                    await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
-                    cancelarResposta('privado');
-                }
-                input.value = ""; 
+        window.enviarImagemPrivada = async (event) => {
+            const file = event.target.files[0];
+            if (!file || !chatAtivoId) return;
+            document.getElementById('upload-overlay').classList.remove('hidden');
+            const base64 = await converterParaBase64(file);
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            await addDoc(collection(db, `chats/${chatId}/mensagens`), { 
+                de: meuNome, texto: "", img: base64, data: Date.now(), dataStr: formataData(), lida: false 
             });
+            document.getElementById('upload-overlay').classList.add('hidden');
+            await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
 
-        // --- WEBRTC LÓGICA ---
+        // --- LÓGICA DE CHAMADAS WEBRTC ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
         let pcChamada = null, streamLocal = null, streamRemoto = null, chamadaAtualId = null;
 
@@ -360,7 +331,7 @@
                 document.getElementById('video-local').srcObject = streamLocal;
                 if(tipo === 'audio') document.getElementById('video-local').classList.add('hidden');
                 else document.getElementById('video-local').classList.remove('hidden');
-            } catch(e) { alert("Permita a câmera/microfone para ligar!"); }
+            } catch(e) { console.error(e); }
         }
 
         window.iniciarChamada = async (tipo) => {
@@ -368,483 +339,24 @@
             chamadaAtualId = [meuNome, chatAtivoId].sort().join("_");
             document.getElementById('tela-chamada').classList.remove('hidden');
             document.getElementById('chamada-nome').innerText = chatAtivoId;
-            document.getElementById('chamada-status').innerText = "Chamando...";
-            document.getElementById('btn-atender-chamada').classList.add('hidden');
-
             await abrirCameraAudio(tipo);
             pcChamada = new RTCPeerConnection(configuracaoRTC);
             streamRemoto = new MediaStream();
             document.getElementById('video-remoto').srcObject = streamRemoto;
-
             streamLocal.getTracks().forEach(t => pcChamada.addTrack(t, streamLocal));
-            pcChamada.ontrack = e => { e.streams[0].getTracks().forEach(t => streamRemoto.addTrack(t)); };
-
+            pcChamada.ontrack = e => e.streams[0].getTracks().forEach(t => streamRemoto.addTrack(t));
             const refChamada = doc(db, "chamadas", chamadaAtualId);
-            const candCaller = collection(refChamada, "callerCandidates");
-            const candCallee = collection(refChamada, "calleeCandidates");
-
-            pcChamada.onicecandidate = e => { if(e.candidate) addDoc(candCaller, e.candidate.toJSON()); };
-
+            pcChamada.onicecandidate = e => { if(e.candidate) addDoc(collection(refChamada, "callerCandidates"), e.candidate.toJSON()); };
             const offer = await pcChamada.createOffer();
             await pcChamada.setLocalDescription(offer);
             await setDoc(refChamada, { de: meuNome, para: chatAtivoId, tipo: tipo, offer: { type: offer.type, sdp: offer.sdp }, status: "chamando" });
-
-            window.unsubChamada = onSnapshot(refChamada, (d) => {
+            onSnapshot(refChamada, (d) => {
                 const data = d.data();
-                if(data && (data.status === "rejeitada" || data.status === "encerrada")) desligarLocal();
-                if(data && data.answer && !pcChamada.currentRemoteDescription) {
-                    pcChamada.setRemoteDescription(new RTCSessionDescription(data.answer));
-                    document.getElementById('chamada-status').innerText = "Conectado";
-                }
-            });
-            window.unsubCand = onSnapshot(candCallee, snap => { snap.docChanges().forEach(c => { if(c.type === "added") pcChamada.addIceCandidate(new RTCIceCandidate(c.doc.data())); }); });
-        };
-
-        function escutarChamadas() {
-            onSnapshot(query(collection(db, "chamadas"), where("para", "==", meuNome)), snap => {
-                snap.docChanges().forEach(c => {
-                    if(c.type === "added" || c.type === "modified") {
-                        const data = c.doc.data();
-                        if(data.status === "chamando") {
-                            chamadaAtualId = c.doc.id;
-                            document.getElementById('tela-chamada').classList.remove('hidden');
-                            document.getElementById('chamada-nome').innerText = data.de;
-                            document.getElementById('chamada-status').innerText = data.tipo === 'video' ? "Recebendo chamada de vídeo..." : "Recebendo chamada de voz...";
-                            document.getElementById('btn-atender-chamada').classList.remove('hidden');
-                        } else if (data.status === "encerrada") { desligarLocal(); }
-                    }
-                });
-            });
-        }
-
-        window.atenderChamada = async () => {
-            document.getElementById('btn-atender-chamada').classList.add('hidden');
-            document.getElementById('chamada-status').innerText = "Conectando...";
-            const refChamada = doc(db, "chamadas", chamadaAtualId);
-            const dataDoc = await getDoc(refChamada); const data = dataDoc.data();
-            await abrirCameraAudio(data.tipo);
-            pcChamada = new RTCPeerConnection(configuracaoRTC);
-            streamRemoto = new MediaStream();
-            document.getElementById('video-remoto').srcObject = streamRemoto;
-
-            streamLocal.getTracks().forEach(t => pcChamada.addTrack(t, streamLocal));
-            pcChamada.ontrack = e => { e.streams[0].getTracks().forEach(t => streamRemoto.addTrack(t)); };
-
-            const candCaller = collection(refChamada, "callerCandidates");
-            const candCallee = collection(refChamada, "calleeCandidates");
-            pcChamada.onicecandidate = e => { if(e.candidate) addDoc(candCallee, e.candidate.toJSON()); };
-
-            await pcChamada.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await pcChamada.createAnswer();
-            await pcChamada.setLocalDescription(answer);
-
-            await updateDoc(refChamada, { answer: { type: answer.type, sdp: answer.sdp }, status: "atendida" });
-            document.getElementById('chamada-status').innerText = "Conectado";
-
-            window.unsubCand = onSnapshot(candCaller, snap => { snap.docChanges().forEach(c => { if(c.type === "added") pcChamada.addIceCandidate(new RTCIceCandidate(c.doc.data())); }); });
-            window.unsubChamada = onSnapshot(refChamada, (d) => { if(d.data() && d.data().status === "encerrada") desligarLocal(); });
-        };
-
-        window.desligarChamada = async () => { if(chamadaAtualId) await setDoc(doc(db, "chamadas", chamadaAtualId), { status: "encerrada" }, { merge: true }); desligarLocal(); };
-        function desligarLocal() {
-            if(pcChamada) { pcChamada.close(); pcChamada = null; }
-            if(streamLocal) { streamLocal.getTracks().forEach(t => t.stop()); streamLocal = null; }
-            if(window.unsubChamada) window.unsubChamada();
-            if(window.unsubCand) window.unsubCand();
-            document.getElementById('tela-chamada').classList.add('hidden');
-            chamadaAtualId = null;
-        }
-
-        // --- SISTEMA DE STORIES ---
-        window.postarStory = async () => {
-            const texto = prompt("Qual é o seu status de hoje?");
-            if (texto && texto.trim() !== "") { await addDoc(collection(db, "stories"), { nome: meuNome, texto: texto, data: Date.now(), dataStr: formataData(), cor: minhaCor }); }
-        };
-
-        function ouvirStories() {
-            const umDiaAtras = Date.now() - (24 * 60 * 60 * 1000); 
-            onSnapshot(query(collection(db, "stories"), where("data", ">", umDiaAtras), orderBy("data", "desc")), (snap) => {
-                const lista = document.getElementById('stories-list'); lista.innerHTML = "";
-                snap.forEach(s => {
-                    const d = s.data();
-                    if (d.nome === meuNome || meusSeguindo.includes(d.nome)) {
-                        const safeText = (d.texto || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                        lista.innerHTML += `<div class="story-circle" style="background:${d.cor || '#333'}" onclick="verStory('${s.id}', '${d.nome}', '${d.cor}', '${safeText}', '${d.dataStr}')">${d.nome[0]}</div>`;
-                    }
-                });
-            });
-        }
-
-        window.verStory = (id, nome, cor, texto, dataStr) => {
-            document.getElementById('sv-avatar').innerText = nome[0]; document.getElementById('sv-avatar').style.background = cor;
-            document.getElementById('sv-nome').innerText = nome; document.getElementById('sv-texto').innerText = texto; document.getElementById('sv-data').innerText = dataStr;
-            const btnDel = document.getElementById('btn-del-story');
-            if (nome === meuNome) { btnDel.classList.remove('hidden'); btnDel.onclick = () => excluirStory(id); } else { btnDel.classList.add('hidden'); }
-            document.getElementById('story-viewer').classList.remove('hidden');
-        };
-
-        window.fecharStory = () => { document.getElementById('story-viewer').classList.add('hidden'); };
-        window.excluirStory = async (id) => { if(confirm("Apagar este status?")) { await deleteDoc(doc(db, "stories", id)); fecharStory(); } };
-
-        // --- SISTEMA DE ÁUDIO MSG ---
-        window.iniciarGravacao = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader(); reader.readAsDataURL(audioBlob);
-                    reader.onloadend = async () => {
-                        const base64Audio = reader.result;
-                        if(base64Audio.length > 900000) return alert("Áudio muito longo!");
-                        enviarMensagemAudio(base64Audio);
-                    };
-                };
-                mediaRecorder.start(); document.getElementById('btn-audio').classList.add('recording');
-            } catch (err) { alert("Permita o microfone para gravar áudio."); }
-        };
-
-        window.pararGravacao = () => { if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); document.getElementById('btn-audio').classList.remove('recording'); } };
-
-        async function enviarMensagemAudio(base64) {
-            const chatId = [meuNome, chatAtivoId].sort().join("_");
-            await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, audio: base64, data: Date.now(), dataStr: formataData(), lida: false, editado: false });
-        }
-
-        // --- SISTEMA DO JOGO DA VELHA ---
-        window.enviarJogoVelha = async () => {
-            if(chatAtivoId) {
-                const chatId = [meuNome, chatAtivoId].sort().join("_");
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tipo: 'jogo_velha', tabuleiro: ['', '', '', '', '', '', '', '', ''], turno: meuNome, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false });
-                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
-            }
-        };
-
-        window.jogarVelha = async (msgId, index, turnoAtual, vencedor, tabStr) => {
-            if (vencedor !== 'null' || turnoAtual !== meuNome) return;
-            let tab = tabStr.split(','); if (tab[index] !== '') return; 
-            let espacosVazios = tab.filter(c => c === '').length;
-            let simbolo = espacosVazios % 2 !== 0 ? 'X' : 'O'; tab[index] = simbolo;
-
-            let novoVencedor = null;
-            const linhas = [ [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6] ];
-            for (let l of linhas) { if (tab[l[0]] && tab[l[0]] === tab[l[1]] && tab[l[0]] === tab[l[2]]) { novoVencedor = meuNome; break; } }
-            if (!novoVencedor && !tab.includes('')) novoVencedor = 'Empate';
-
-            const chatId = [meuNome, chatAtivoId].sort().join("_");
-            await updateDoc(doc(db, `chats/${chatId}/mensagens`, msgId), { tabuleiro: tab, turno: novoVencedor ? null : chatAtivoId, vencedor: novoVencedor });
-        };
-
-        // --- SISTEMA PWA (INSTALAÇÃO) ---
-        let instalador;
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); instalador = e; document.getElementById('btn-instalar').classList.remove('hidden'); });
-        window.instalarApp = async () => { if(instalador) { instalador.prompt(); const { outcome } = await instalador.userChoice; if(outcome === 'accepted') document.getElementById('btn-instalar').classList.add('hidden'); instalador = null; } };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Falhou:", err));
-
-                 // --- SISTEMA CORE ---
-
-        // 1. Áudio de toque de telefone
-        const toqueChamada = new Audio("https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg");
-        toqueChamada.loop = true; 
-
-        // 2. Permissão de Notificação
-        window.pedirPermissaoNotificacao = async () => {
-            if ("Notification" in window) {
-                const p = await Notification.requestPermission();
-                if(p === "granted") console.log("Notificações ativadas!");
-            }
-        };
-
-        // 3. O NOVO Entrar (Pede permissão para o celular vibrar/tocar)
-        window.entrar = async () => {
-            const nome = document.getElementById('nome-usuario').value.trim();
-            if(nome) {
-                meuNome = nome;
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
-                
-                pedirPermissaoNotificacao(); 
-                
-                carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories(); escutarChamadas();
-            }
-        };
-
-        // 4. A NOVA função de escutar chamadas (Substitui a antiga automaticamente)
-        function escutarChamadas() {
-            onSnapshot(query(collection(db, "chamadas"), where("para", "==", meuNome)), snap => {
-                snap.docChanges().forEach(c => {
-                    const d = c.doc.data();
-                    
-                    if(d.status === "chamando") {
-                        chamadaAtualId = c.doc.id;
-                        document.getElementById('tela-chamada').classList.remove('hidden');
-                        document.getElementById('chamada-nome').innerText = d.de;
-                        document.getElementById('chamada-status').innerText = d.tipo === 'video' ? "Vídeo Chamada..." : "Ligação de Áudio...";
-                        document.getElementById('btn-atender-chamada').classList.remove('hidden');
-
-                        toqueChamada.play().catch(e => console.log("Erro no som:", e));
-                        
-                        if (Notification.permission === "granted") {
-                            navigator.serviceWorker.ready.then(reg => {
-                                reg.showNotification(`📞 Nova Chamada de ${d.de}`, {
-                                    body: "Clique aqui para atender na StackNet!",
-                                    vibrate: [200, 100, 200, 100, 200, 100, 200], 
-                                    requireInteraction: true 
-                                });
-                            }).catch(() => {
-                                new Notification(`📞 Chamada de ${d.de}`, { body: "Abra o app para atender!", requireInteraction: true });
-                            });
-                        }
-                        
-                    } else if (d.status === "encerrada" || d.status === "atendida" || d.status === "rejeitada") {
-                        toqueChamada.pause();
-                        toqueChamada.currentTime = 0;
-                        desligarLocal();
-                    }
-                });
-            });
-        }
-
-
-        window.sair = async () => { await updateDoc(doc(db, "usuarios", meuNome), { online: false }); location.reload(); };
-
-        window.mudarAba = (aba) => {
-            abaAtiva = aba;
-            if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
-            document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
-        };
-
-        window.excluirItem = async (caminho, id) => { if(confirm("Apagar para sempre?")) await deleteDoc(doc(db, caminho, id)); };
-
-        window.editarItem = async (caminho, id, campo) => {
-            try {
-                const docRef = doc(db, caminho, id); const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const textoAntigo = docSnap.data()[campo] || "";
-                    const novo = prompt("Editar:", textoAntigo);
-                    if (novo !== null && novo.trim() !== "" && novo !== textoAntigo) { await updateDoc(docRef, { [campo]: novo, editado: true }); }
-                }
-            } catch (e) { console.error("Erro ao editar:", e); }
-        };
-
-        window.toggleSeguir = async (idOutro, event) => {
-            if (event) event.stopPropagation();
-            try {
-                const ref = doc(db, "usuarios", meuNome);
-                if (meusSeguindo.includes(idOutro)) { await updateDoc(ref, { seguindo: arrayRemove(idOutro) }); } 
-                else { await updateDoc(ref, { seguindo: arrayUnion(idOutro) }); }
-            } catch (e) { console.error("Erro ao seguir:", e); }
-        };
-
-        window.prepararResposta = (id, nome, texto, tipo) => {
-            const txtLindo = texto.replace(/\\'/g, "'"); 
-            if (tipo === 'geral') {
-                replyingToGeral = { nome, texto: txtLindo }; document.getElementById('preview-reply-geral').classList.remove('hidden');
-                document.getElementById('text-reply-geral').innerText = `Responder a ${nome}: ${txtLindo}`; document.getElementById('chatGeralInput').focus();
-            } else {
-                replyingToPrivado = { nome, texto: txtLindo }; document.getElementById('preview-reply-privado').classList.remove('hidden');
-                document.getElementById('text-reply-privado').innerText = `Responder a ${nome}: ${txtLindo}`; document.getElementById('msgPrivadaInput').focus();
-            }
-        };
-
-        window.cancelarResposta = (tipo) => {
-            if (tipo === 'geral') { replyingToGeral = null; document.getElementById('preview-reply-geral').classList.add('hidden'); } 
-            else { replyingToPrivado = null; document.getElementById('preview-reply-privado').classList.add('hidden'); }
-        };
-
-        window.mudarCor = (cor) => { minhaCor = cor; document.documentElement.style.setProperty('--main', cor); };
-        
-        window.salvarBio = async () => { minhaTag = document.getElementById('tagInput').value; await updateDoc(doc(db, "usuarios", meuNome), { bio: document.getElementById('bioInput').value, cor: minhaCor, tag: minhaTag }); alert("Perfil Salvo com a sua Tag!"); };
-        
-        async function carregarPerfil() {
-            onSnapshot(doc(db, "usuarios", meuNome), (d) => {
-                   if(d.exists()) {
-                    const dados = d.data(); minhaCor = dados.cor || "#00ff88"; minhaTag = dados.tag || ""; meusSeguindo = dados.seguindo || [];
-                    document.documentElement.style.setProperty('--main', minhaCor); document.getElementById('perf-nome').innerText = meuNome;
-                    document.getElementById('perf-avatar').innerText = meuNome[0]; document.getElementById('perf-avatar').style.background = minhaCor;
-                    document.getElementById('bioInput').value = dados.bio || ""; document.getElementById('tagInput').value = minhaTag; document.getElementById('num-seguindo').innerText = meusSeguindo.length;
-                    filtrarUsuarios(); // Atualiza a aba ao carregar os seguindo
-                }
-            });
-            onSnapshot(query(collection(db, "usuarios"), where("seguindo", "array-contains", meuNome)), (snap) => document.getElementById('num-seguidores').innerText = snap.size);
-        }
-
-        // --- POSTAR FEED MODIFICADO PARA SUPORTAR BASE64 E LINKS ---
-        window.postar = async () => {
-            const txt = document.getElementById('postInput').value; 
-            const linkImg = txt.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i)?.[0] || null;
-            
-            let imagemFinal = base64FeedAtual || linkImg;
-            let textoFinal = txt;
-            if(!base64FeedAtual && linkImg) textoFinal = txt.replace(linkImg, "");
-
-            if(textoFinal.trim() || imagemFinal) { 
-                await addDoc(collection(db, "posts"), { 
-                    nome: meuNome, tag: minhaTag, content: textoFinal, img: imagemFinal, 
-                    data: Date.now(), dataStr: formataData(), likes: 0, comentarios: [], cor: minhaCor, editado: false 
-                }); 
-                document.getElementById('postInput').value = ""; 
-                removerImgFeed(); 
-            }
-        };
-
-        window.toggleLike = async (postId) => {
-            let curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
-            const index = curtidos.indexOf(postId);
-            if(index > -1) { await updateDoc(doc(db, "posts", postId), { likes: increment(-1) }); curtidos.splice(index, 1); } 
-            else { await updateDoc(doc(db, "posts", postId), { likes: increment(1) }); curtidos.push(postId); }
-            localStorage.setItem('curtidos', JSON.stringify(curtidos));
-        };
-
-        window.comentar = async (postId) => { const msg = prompt("Deixe seu comentário:"); if(msg) { await updateDoc(doc(db, "posts", postId), { comentarios: arrayUnion({ nome: meuNome, texto: msg }) }); } };
-
-        function ouvirFeed() {
-            onSnapshot(query(collection(db, "posts"), orderBy("data", "desc")), (snap) => {
-                const feed = document.getElementById('feed-lista'); feed.innerHTML = "";
-                const curtidos = JSON.parse(localStorage.getItem('curtidos') || "[]");
-                snap.forEach(p => {
-                    const d = p.data(); const ehCurtido = curtidos.includes(p.id);
-                    let acoesTopo = d.nome === meuNome ? `<div class="acoes-topo"><button class="btn-acao btn-edit" onclick="editarItem('posts', '${p.id}', 'content')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('posts', '${p.id}')">X</button></div>` : "";
-                    let comentariosHTML = ""; if(d.comentarios) { d.comentarios.forEach(c => { comentariosHTML += `<div class="comentario-box"><b style="color:var(--main)">${c.nome}:</b> ${c.texto}</div>`; }); }
-                    let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || 'var(--main)'}">${d.tag}</span>` : "";
-                    
-                    feed.innerHTML += `<div class="post-card">${acoesTopo}<div class="card-header"><div class="avatar" style="background:${d.cor || 'var(--main)'};">${d.nome[0]}</div><div class="info"><b style="color:${d.cor || 'var(--main)'}">${d.nome}</b>${badgeTag}<br><span>${d.dataStr || ""} ${d.editado ? '<span class="editado-tag">(Editado)</span>' : ''}</span></div></div><div style="font-size:15px; margin-bottom:10px;">${d.content}</div>${d.img ? `<img src="${d.img}" class="post-img">` : ""}<div style="display:flex; gap:10px; margin-top:15px;"><div class="like-area ${ehCurtido ? 'curtido' : ''}" onclick="toggleLike('${p.id}')">❤️ ${d.likes || 0}</div><div class="like-area" onclick="comentar('${p.id}')">💬 Comentar</div></div><div style="margin-top:10px;">${comentariosHTML}</div></div>`;
-                });
-            });
-        }
-
-        window.enviarGeral = async () => {
-            const txt = document.getElementById('chatGeralInput').value;
-            if(txt.trim()) { 
-                await addDoc(collection(db, "chat_geral"), { nome: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), cor: minhaCor, editado: false, replyTo: replyingToGeral }); 
-                document.getElementById('chatGeralInput').value = ""; cancelarResposta('geral');
-            }
-        };
-
-        function ouvirChatGeral() {
-            onSnapshot(query(collection(db, "chat_geral"), orderBy("data", "asc")), (snap) => {
-                const lista = document.getElementById('chat-geral-lista'); lista.innerHTML = "";
-                snap.forEach(m => {
-                    const d = m.data(); const souEu = d.nome === meuNome;
-                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
-                    let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || 'var(--main)'}">${d.tag}</span>` : "";
-                    
-                    let botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome}', '${(d.texto||"").replace(/'/g, "\\'")}', 'geral')">Responder</button>`;
-                    if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chat_geral', '${m.id}', 'texto')">Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chat_geral', '${m.id}')">Apagar</button>`;
-                    botoesMsg += `</div>`;
-                    lista.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : '#30363d'}; color:${souEu ? 'black' : 'white'};">${replyHtml}<b style="font-size:10px; opacity:0.6;">${d.nome}</b>${badgeTag}<br>${d.texto}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Editado)</i>' : ''}</div></div>${botoesMsg}</div>`;
-                });
-                lista.scrollTop = lista.scrollHeight;
-            });
-        }
-
-        // --- SISTEMA DE FILTRO DE USUARIOS (NOVO) ---
-        window.mudarFiltroUsuarios = (filtro) => {
-            filtroUsuariosAtual = filtro;
-            const btnContatos = document.getElementById('btn-filtro-contatos');
-            const btnExplorar = document.getElementById('btn-filtro-explorar');
-            
-            if(filtro === 'contatos') {
-                btnContatos.style.background = 'var(--main)'; btnContatos.style.color = 'black'; btnContatos.style.borderColor = 'var(--main)';
-                btnExplorar.style.background = 'var(--card)'; btnExplorar.style.color = 'white'; btnExplorar.style.borderColor = 'var(--border)';
-            } else {
-                btnExplorar.style.background = 'var(--main)'; btnExplorar.style.color = 'black'; btnExplorar.style.borderColor = 'var(--main)';
-                btnContatos.style.background = 'var(--card)'; btnContatos.style.color = 'white'; btnContatos.style.borderColor = 'var(--border)';
-            }
-            filtrarUsuarios(); 
-        };
-
-        window.filtrarUsuarios = () => { 
-            const b = document.getElementById('buscaUsuario').value.toLowerCase(); 
-            document.querySelectorAll('.user-card').forEach(c => {
-                const nomeUser = c.getAttribute('data-nome').toLowerCase();
-                const taSeguindo = c.getAttribute('data-seguindo') === 'true'; 
-                
-                let passaTexto = nomeUser.includes(b);
-                let passaAba = true;
-                
-                if (filtroUsuariosAtual === 'contatos' && !taSeguindo) { passaAba = false; }
-                
-                c.classList.toggle('hidden', !(passaTexto && passaAba));
-            }); 
-        };
-
-        function ouvirUsuarios() {
-            onSnapshot(collection(db, "usuarios"), (snap) => {
-                const lista = document.getElementById('lista-usuarios'); lista.innerHTML = "";
-                snap.forEach(u => {
-                    if(u.id !== meuNome) {
-                        const d = u.data(); const taSeguindo = meusSeguindo.includes(u.id);
-                        let badgeTag = d.tag ? `<span class="tag-user" style="background:${d.cor || '#00ff88'}">${d.tag}</span>` : "";
-                        lista.innerHTML += `<div class="user-card" data-nome="${u.id}" data-seguindo="${taSeguindo}" onclick="abrirChat('${u.id}', '${d.cor}')"><div class="user-info-area"><div class="avatar" style="background:${d.cor || '#333'}">${u.id[0]}</div><div><b style="color:${d.cor || 'white'}">${u.id} ${d.online ? '<span style="color:#00ff00; font-size:10px;">●</span>' : ''}</b>${badgeTag}<div style="font-size:12px; color:var(--text-gray)">${d.bio || 'Sem bio'}</div></div></div><button class="btn-seguir ${taSeguindo ? 'btn-seguindo' : ''}" onclick="toggleSeguir('${u.id}', event)">${taSeguindo ? 'Seguindo' : 'Seguir'}</button></div>`;
-                    }
-                });
-                filtrarUsuarios();
-            });
-        }
-
-        // --- RENDERIZAÇÃO DO CHAT (Suporte à Foto) ---
-        window.abrirChat = (id, corOutro) => {
-            chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden'); document.getElementById('chat-com-nome').innerText = id;
-            const chatId = [meuNome, id].sort().join("_");
-            onSnapshot(doc(db, "digitando", chatId), (d) => document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "");
-            if(window.unsubChat) window.unsubChat();
-            window.unsubChat = onSnapshot(query(collection(db, `chats/${chatId}/mensagens`), orderBy("data")), (snap) => {
-                const box = document.getElementById('mensagens-privadas'); box.innerHTML = "";
-                snap.docs.forEach(m => {
-                    const d = m.data(); const souEu = d.de === meuNome;
-                    if (!souEu && d.lida !== true) updateDoc(doc(db, `chats/${chatId}/mensagens`, m.id), { lida: true });
-                    let iconLida = souEu ? `<span style="color:${d.lida ? '#000' : 'rgba(0,0,0,0.4)'}; font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>` : "";
-                    if(souEu && d.lida && minhaCor === '#000000') iconLida = `<span style="color:var(--main); font-weight:bold; letter-spacing:-2px; margin-left:5px;">✓✓</span>`;
-                    
-                    let replyHtml = d.replyTo ? `<div class="reply-box"><b>${d.replyTo.nome}</b><br>${d.replyTo.texto}</div>` : "";
-                    
-                    let conteudo = "";
-                    if (d.tipo === 'jogo_velha') {
-                        let boardHtml = `<div class="velha-board">`;
-                        d.tabuleiro.forEach((cel, idx) => { boardHtml += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${idx}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${cel}</div>`; });
-                        boardHtml += `</div>`;
-                        let status = d.vencedor ? (d.vencedor==='Empate'?'Deu Velha! 👵':`Vencedor: ${d.vencedor} 🏆`) : (d.turno === meuNome ? '🔥 Sua vez!' : '⏳ Vez do adversário');
-                        conteudo = `<div style="text-align:center; padding-top:5px;"><b>Jogo da Velha</b><br><small>${status}</small>${boardHtml}</div>`;
-                    } else {
-                        conteudo = d.audio ? `<audio controls src="${d.audio}"></audio>` : (d.texto || "");
-                        if(d.img) {
-                            conteudo += `<div style="margin-top:5px;"><img src="${d.img}" style="max-width:100%; border-radius:8px;"></div>`;
-                        }
-                    }
-                    
-                    let botoesMsg = "";
-                    if(d.tipo !== 'jogo_velha') {
-                        botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao" onclick="prepararResposta('${m.id}', '${d.nome || (souEu? meuNome : id)}', '${d.audio ? '[Áudio]' : (d.img ? '[Imagem]' : (d.texto||"").replace(/'/g, "\\'"))}', 'privado')">Responder</button>`;
-                        if(souEu) botoesMsg += `<button class="btn-acao btn-edit" onclick="editarItem('chats/${chatId}/mensagens', '${m.id}', 'texto')" ${d.audio || d.img ? "style='display:none'" : ""}>Editar</button><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar</button>`;
-                        botoesMsg += `</div>`;
-                    } else if (souEu) { botoesMsg = `<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:3px;"><button class="btn-acao btn-del" onclick="excluirItem('chats/${chatId}/mensagens', '${m.id}')">Apagar Jogo</button></div>`; }
-                    
-                    box.innerHTML += `<div class="msg-container ${souEu ? 'me' : 'other'}"><div class="msg" style="background:${souEu ? minhaCor : (corOutro || '#30363d')}; color:${souEu ? 'black' : 'white'};">${replyHtml}${conteudo}<div class="msg-rodape">${d.dataStr || ""} ${d.editado ? '<i>(Edit)</i>' : ''} ${iconLida}</div></div>${botoesMsg}</div>`;
-                });
-                box.scrollTop = box.scrollHeight;
+                if(data?.answer && !pcChamada.currentRemoteDescription) pcChamada.setRemoteDescription(new RTCSessionDescription(data.answer));
+                if(data?.status === "encerrada") desligarLocal();
             });
         };
-
-        window.enviarPrivado = async () => {
-            const input = document.getElementById('msgPrivadaInput');
-            if(input.value.trim() && chatAtivoId) {
-                const chatId = [meuNome, chatAtivoId].sort().join("_");
-                const txt = input.value; input.value = "";
-                await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, texto: txt, data: Date.now(), dataStr: formataData(), lida: false, editado: false, replyTo: replyingToPrivado });
-                await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true });
-                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
-                cancelarResposta('privado');
-            }
-        };
-
-        window.avisarDigitando = async () => { if(!chatAtivoId) return; const chatId = [meuNome, chatAtivoId].sort().join("_"); await setDoc(doc(db, "digitando", chatId), { [meuNome]: true }, { merge: true }); clearTimeout(digitandoTimeout); digitandoTimeout = setTimeout(async () => { await setDoc(doc(db, "digitando", chatId), { [meuNome]: false }, { merge: true }); }, 2000); };
-        window.fecharChat = () => { document.getElementById('janela-chat').classList.add('hidden'); cancelarResposta('privado'); };
-        function escutarNotificacoes() { onSnapshot(query(collection(db, "notificacoes_chat"), where("para", "==", meuNome)), (snap) => { if(!snap.empty && abaAtiva !== "users") document.getElementById('badge-privado').classList.remove('hidden'); }); }
+ 
     </script>
 </body>
 </html>
