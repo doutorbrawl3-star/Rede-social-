@@ -21,17 +21,13 @@
         /* Perfil */
         .tema-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; display: inline-block; margin: 5px; }
         .contadores { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        
-        /* Nova Tag do Usuário */
         .tag-user { font-size: 10px; background: var(--main); color: black; padding: 2px 6px; border-radius: 5px; margin-left: 5px; font-weight: bold; vertical-align: middle; }
         
         /* Feed & Stories */
         .aba { max-width: 500px; margin: 0 auto; padding: 15px; }
-        
         .stories-wrapper { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
         .story-circle { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--main); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: black; flex-shrink: 0; cursor: pointer; background: #333; }
         .story-add { border: 2px dashed var(--text-gray); background: transparent; color: var(--text-gray); }
-        
         #story-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         
         .post-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; position: relative; }
@@ -43,31 +39,26 @@
         .curtido { color: #ff4444; }
         .acoes-topo { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
         .btn-acao { background: none; border: none; font-size: 11px; font-weight: bold; cursor: pointer; padding: 0; color: var(--text-gray); }
-        .btn-acao:hover { color: white; }
-
         .comentario-box { background: #000; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
 
-        /* Chat e Respostas */
+        /* Chat, Contatos e Filtros */
         .user-card { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
         .btn-seguir { background: var(--main); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-seguindo { background: #30363d; color: white; border: 1px solid var(--border); }
-
-        /* Filtros de contatos */
+        
         .filtros-contatos { display: flex; gap: 10px; margin-bottom: 10px; }
         .btn-filtro { flex: 1; padding: 8px; background: var(--card); color: var(--text-gray); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-filtro.ativo { background: var(--main); color: black; border-color: var(--main); }
-        
+
         #chat-geral-lista, #mensagens-privadas { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #000; border-radius: 10px; margin-bottom: 10px; }
         
         .msg-container { display: flex; flex-direction: column; max-width: 80%; width: fit-content; }
         .msg-container.other { align-self: flex-start; }
-        .msg-container.other .msg { border-radius: 15px 15px 15px 2px; }
         .msg-container.me { align-self: flex-end; }
-        .msg-container.me .msg { border-radius: 15px 15px 2px 15px; }
-        .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .msg { padding: 10px 15px; font-size: 14px; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-radius: 8px; }
         .msg-rodape { font-size: 9px; opacity: 0.6; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         
-        /* Botão Mic, Jogo e Upload */
+        /* Botões Extras */
         .btn-chat-extra { background: #ff4444; color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0; }
         .btn-game-icon { background: #0084ff; font-size: 22px; }
         .btn-upload-icon { background: #a333ff; font-size: 20px; }
@@ -76,17 +67,17 @@
         audio { max-width: 200px; height: 35px; margin-top: 5px; }
         .img-chat { max-width: 200px; border-radius: 8px; margin-top: 5px; }
 
-        /* Estilo do Jogo da Velha no Chat */
+        /* Jogo da Velha */
         .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .velha-cell { width: 50px; height: 50px; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; color: white; }
 
-        /* Sistema de Reply (Citação) */
+        /* Respostas (Reply) */
         .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
         .preview-reply { background: var(--card); padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 12px; display: flex; justify-content: space-between; border: 1px solid var(--border); border-bottom: none; align-items: center; }
 
         input, textarea, select { background: #161b22; color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
 
-        /* Tela de Chamada WebRTC */
+        /* Chamada WebRTC */
         #tela-chamada { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .videos-chamada { position: relative; width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; }
         #video-remoto { width: 100%; height: 100%; object-fit: cover; background: #111; }
@@ -111,7 +102,7 @@
     </div>
 
     <div id="upload-overlay" class="hidden">
-        <p>Enviando Arquivo...</p>
+        <p>A processar imagem...</p>
         <p style="font-size:30px; animation: pulse 1s infinite;">⏳</p>
     </div>
 
@@ -166,7 +157,7 @@
             </div>
 
             <div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-                <textarea id="postInput" placeholder="O que há de novo? (Cole um link de imagem!)" style="margin-bottom:10px;"></textarea>
+                <textarea id="postInput" placeholder="O que há de novo?"></textarea>
                 <div style="display:flex; gap:10px;">
                     <input type="file" id="filePost" accept="image/*" class="hidden" onchange="postarComImagem(event)">
                     <button onclick="document.getElementById('filePost').click()" class="btn-chat-extra btn-upload-icon" style="width: 40px; height: 40px; border-radius: 8px;">📎</button>
@@ -278,11 +269,10 @@
         let mediaRecorder, audioChunks = [];
         let filtroContatoAtual = "meus";
 
-        // --- NOVO: Som de chamada e loop ---
+        // Áudio e Push para chamadas
         const toqueChamada = new Audio("https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg");
-        toqueChamada.loop = true;
+        toqueChamada.loop = true; 
 
-        // --- NOVO: Pedir permissão para push ---
         window.pedirPermissaoNotificacao = async () => {
             if ("Notification" in window) {
                 const p = await Notification.requestPermission();
@@ -292,7 +282,7 @@
 
         const formataData = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth()+1} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
-        // --- SISTEMA BASE64 PARA FOTOS SEM PAGAR FIREBASE STORAGE ---
+        // --- SISTEMA BASE64 PARA FOTOS ---
         const converterParaBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -333,7 +323,6 @@
             document.getElementById('upload-overlay').classList.add('hidden');
             await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
-
 
         // --- LÓGICA DE CHAMADAS (WEBRTC) ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
@@ -419,7 +408,12 @@
                                 });
                             }
                             
-                        } else if (data.status === "encerrada" || data.status === "atendida" || data.status === "rejeitada") {
+                        } else if (data.status === "atendida") {
+                            // CORREÇÃO AQUI
+                            toqueChamada.pause();
+                            toqueChamada.currentTime = 0;
+                            
+                        } else if (data.status === "encerrada" || data.status === "rejeitada") {
                             toqueChamada.pause();
                             toqueChamada.currentTime = 0;
                             desligarLocal();
@@ -640,7 +634,7 @@
                 document.getElementById('app-screen').classList.remove('hidden');
                 await setDoc(doc(db, "usuarios", meuNome), { nome: meuNome, online: true }, { merge: true });
                 
-                pedirPermissaoNotificacao(); // PERMISSÃO DE NOTIFICAÇÃO E TOQUE
+                pedirPermissaoNotificacao(); 
                 
                 carregarPerfil(); ouvirUsuarios(); ouvirFeed(); ouvirChatGeral(); escutarNotificacoes(); ouvirStories(); escutarChamadas();
             }
@@ -654,7 +648,7 @@
             document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
             document.getElementById('aba-' + aba).classList.remove('hidden');
         };
-
+        
         window.mudarFiltroContatos = (tipo) => {
             filtroContatoAtual = tipo;
             document.getElementById('btn-meus-contatos').classList.toggle('ativo', tipo === 'meus');
