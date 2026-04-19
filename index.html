@@ -67,17 +67,28 @@
         audio { max-width: 200px; height: 35px; margin-top: 5px; }
         .img-chat { max-width: 200px; border-radius: 8px; margin-top: 5px; }
 
-        /* Jogos */
+        /* Jogos e Grid */
         .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .velha-cell { width: 50px; height: 50px; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; color: white; }
         .menu-jogos-box { position:absolute; bottom:70px; left:15px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; z-index:200; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 220px; }
         
-        /* Novos Jogos */
         .conecta-board { display: grid; grid-template-columns: repeat(7, 30px); gap: 3px; background: #0055ff; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .conecta-cell { width: 30px; height: 30px; background: var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
         .conecta-cell.red { background: #ff4444; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
         .conecta-cell.yellow { background: #ffdd00; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
         .batata-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin: 5px auto; text-align: center; }
+
+        /* Batalha Naval e Forca */
+        .naval-board { display: grid; grid-template-columns: repeat(5, 35px); gap: 2px; background: #000; padding: 4px; border-radius: 5px; margin: 10px auto; width: fit-content; }
+        .naval-cell { width: 35px; height: 35px; background: #1e3a8a; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
+        .naval-cell.fogo { background: #ff4444; }
+        .naval-cell.agua { background: #3b82f6; opacity: 0.5; }
+        .naval-cell.navio-meu { background: #00ff88; }
+        
+        .forca-letras { letter-spacing: 5px; font-size: 24px; font-weight: bold; margin: 10px 0; font-family: monospace; }
+        .teclado-forca { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; max-width: 220px; margin: 0 auto; }
+        .tecla { background: var(--card); border: 1px solid var(--border); color: white; padding: 5px; min-width: 25px; text-align: center; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .tecla.usada { opacity: 0.3; pointer-events: none; background: #000; }
 
         /* Respostas (Reply) */
         .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
@@ -220,9 +231,11 @@
                     <button onclick="enviarJogoVelha()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">❌ Jogo da Velha ⭕</button>
                     <button onclick="enviarPPT()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✊ Pedra, Papel, Tesoura</button>
                     <button onclick="enviarDados()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🎲 Batalha de Dados</button>
-                    <hr style="border: 0; border-top: 1px solid var(--border); width: 100%; margin: 2px 0;">
                     <button onclick="enviarConecta4()" style="background:#0055ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🔵 Conecta 4 🔴</button>
                     <button onclick="enviarBatata()" style="background:#ff4444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">💣 Batata Quente</button>
+                    <hr style="border: 0; border-top: 1px solid var(--border); width: 100%; margin: 2px 0;">
+                    <button onclick="enviarNaval()" style="background:#1e3a8a; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🚢 Batalha Naval</button>
+                    <button onclick="enviarForca()" style="background:#00ff88; color:black; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🔤 Forca Secreta</button>
                 </div>
 
                 <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center; position: relative;">
@@ -575,7 +588,8 @@
                 const j1 = novasJogadas[meuNome];
                 const j2 = novasJogadas[chatAtivoId];
                 let vencedor = null;
-                   if (j1 === j2) vencedor = 'Empate';
+                
+                if (j1 === j2) vencedor = 'Empate';
                 else if ((j1 === '✊' && j2 === '✌️') || (j1 === '✋' && j2 === '✊') || (j1 === '✌️' && j2 === '✋')) vencedor = meuNome;
                 else vencedor = chatAtivoId;
                 
@@ -694,6 +708,112 @@
                 await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
             }
         };
+
+        // 6. Batalha Naval
+        window.enviarNaval = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_naval', fase: 'posicionamento',
+                    navios: { [meuNome]: [], [chatAtivoId]: [] },
+                    tiros: { [meuNome]: [], [chatAtivoId]: [] },
+                    turno: meuNome, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
+
+        window.cliqueNaval = async (msgId, index) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+
+            if (d.vencedor) return;
+
+            let naviosMeu = d.navios[meuNome] || [];
+            let naviosInimigo = d.navios[chatAtivoId] || [];
+            let tirosMeus = d.tiros[meuNome] || [];
+
+            if (d.fase === 'posicionamento') {
+                if (naviosMeu.length >= 3) return; 
+                if (naviosMeu.includes(index)) return; 
+                
+                naviosMeu.push(index);
+                let update = { [`navios.${meuNome}`]: naviosMeu };
+                
+                if (naviosMeu.length === 3 && naviosInimigo.length === 3) {
+                    update.fase = 'batalha';
+                }
+                await updateDoc(docRef, update);
+
+            } else if (d.fase === 'batalha') {
+                if (d.turno !== meuNome) return;
+                if (tirosMeus.includes(index)) return;
+
+                tirosMeus.push(index);
+                let update = { [`tiros.${meuNome}`]: tirosMeus, turno: chatAtivoId };
+
+                // Checa se afundou todos
+                let acertos = tirosMeus.filter(t => naviosInimigo.includes(t));
+                if (acertos.length >= 3) {
+                    update.vencedor = meuNome;
+                    update.turno = null;
+                }
+                await updateDoc(docRef, update);
+            }
+        };
+
+        // 7. Forca Secreta
+        window.enviarForca = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const palavra = prompt("Digite a palavra secreta para o seu amigo adivinhar:");
+                if (!palavra || palavra.trim() === "") return;
+                
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_forca', palavra: palavra.toUpperCase().trim(),
+                    letrasUsadas: [], erros: 0, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
+
+        window.jogarForca = async (msgId, letra) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+
+            if (d.vencedor || d.de === meuNome) return; // Quem criou não joga
+            if (d.letrasUsadas.includes(letra)) return;
+
+            let novasLetras = [...d.letrasUsadas, letra];
+            let novosErros = d.erros;
+            
+            if (!d.palavra.includes(letra)) novosErros++;
+
+            let vencedor = null;
+            if (novosErros >= 6) {
+                vencedor = d.de; // Criador ganha se enforcar
+            } else {
+                let todasReveladas = true;
+                for (let i = 0; i < d.palavra.length; i++) {
+                    if (d.palavra[i] !== ' ' && !novasLetras.includes(d.palavra[i])) {
+                        todasReveladas = false;
+                        break;
+                    }
+                }
+                if (todasReveladas) vencedor = meuNome; // Adivinhador ganha
+            }
+
+            await updateDoc(docRef, { letrasUsadas: novasLetras, erros: novosErros, vencedor: vencedor });
+        };
+
 
         // --- PWA ---
         let instalador;
@@ -815,6 +935,7 @@
                     
                     let conteudo = "";
                     
+                    // RENDER DOS JOGOS
                     if (d.tipo === 'jogo_velha') {
                         let boardHtml = `<div class="velha-board">`;
                         d.tabuleiro.forEach((cel, idx) => { boardHtml += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${idx}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${cel}</div>`; });
@@ -823,7 +944,7 @@
                         conteudo = `<div style="text-align:center; padding-top:5px;"><b>Jogo da Velha</b><br><small>${status}</small>${boardHtml}</div>`;
                     
                     } else if (d.tipo === 'jogo_ppt') {
-                        let j1 =d.jogadas[meuNome];
+                        let j1 = d.jogadas[meuNome];
                         let status = "Escolha sua jogada!";
                         let botoesHTML = `<div style="display:flex; gap:10px; justify-content:center; margin-top:8px;">
                             <button onclick="jogarPPT('${m.id}', '✊')" style="font-size:24px; cursor:pointer; background:none; border:none;">✊</button>
@@ -878,6 +999,93 @@
                         let btn = (!explodiu && d.posse === meuNome) ? `<button onclick="passarBatata('${m.id}')" style="background:#ff4444; color:white; padding:8px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; width:100%; margin-top:8px;">PASSA PRA FRENTE!</button>` : "";
                         conteudo = `<div class="batata-box"><b>Batata Quente</b><br><small>${status}</small><br><div style="font-size:45px; margin:5px 0; display:inline-block; ${explodiu?'':'animation: pulse 0.5s infinite'}">${explodiu?'💥':'💣'}</div>${btn}</div>`;
                     
+                    } else if (d.tipo === 'jogo_naval') {
+                        let status = "";
+                        let instrucao = "";
+                        if (d.vencedor) {
+                            status = `Vencedor: ${d.vencedor} 🏆`;
+                        } else if (d.fase === 'posicionamento') {
+                            let prontosMeus = (d.navios[meuNome]||[]).length;
+                            let prontosInimigo = (d.navios[chatAtivoId]||[]).length;
+                            status = `Posicionando... (${prontosMeus}/3)`;
+                            instrucao = prontosMeus < 3 ? "Clique em 3 blocos para esconder seus navios!" : (prontosInimigo < 3 ? "Aguardando inimigo esconder..." : "");
+                        } else {
+                            status = d.turno === meuNome ? "🔥 Seu Turno de Atirar!" : "⏳ Inimigo mirando...";
+                            instrucao = d.turno === meuNome ? "Clique no mapa inimigo!" : "";
+                        }
+
+                        let boardHtml = `<div class="naval-board">`;
+                        for(let i=0; i<25; i++) {
+                            let classe = "";
+                            let onClick = "";
+                            let textoCelula = "";
+                            
+                            // Renderiza diferente dependendo da fase e do dono da mensagem
+                            if (d.fase === 'posicionamento') {
+                                if ((d.navios[meuNome]||[]).includes(i)) classe = "navio-meu";
+                                onClick = `onclick="cliqueNaval('${m.id}', ${i})"`;
+                            } else {
+                                // Fase Batalha: Mostra o grid INIMIGO para você atirar
+                                let tirosMeus = d.tiros[meuNome] || [];
+                                let naviosInimigo = d.navios[chatAtivoId] || [];
+                                
+                                if (tirosMeus.includes(i)) {
+                                    if (naviosInimigo.includes(i)) { classe = "fogo"; textoCelula = "💥"; }
+                                    else { classe = "agua"; textoCelula = "💧"; }
+                                }
+                                onClick = `onclick="cliqueNaval('${m.id}', ${i})"`;
+                            }
+                            
+                            boardHtml += `<div class="naval-cell ${classe}" ${onClick}>${textoCelula}</div>`;
+                        }
+                        boardHtml += `</div>`;
+                        conteudo = `<div style="text-align:center; padding-top:5px;"><b>Batalha Naval (5x5)</b><br><small>${status}</small><br><span style="font-size:10px; opacity:0.7;">${instrucao}</span>${boardHtml}</div>`;
+                        
+                    } else if (d.tipo === 'jogo_forca') {
+                        let status = "";
+                        let criador = d.de;
+                        let adivinhador = criador === meuNome ? chatAtivoId : meuNome;
+
+                        if (d.vencedor) {
+                            status = d.vencedor === adivinhador ? `${adivinhador} acertou! 🎉` : `${criador} enforcou! 💀`;
+                        } else {
+                            status = souEu ? "Seu amigo está tentando..." : `Erros: ${d.erros}/6`;
+                        }
+
+                        // Renderiza a palavra
+                        let palavraHtml = "";
+                        for (let i = 0; i < d.palavra.length; i++) {
+                            let letra = d.palavra[i];
+                            if (letra === ' ') palavraHtml += "&nbsp;&nbsp;";
+                            else if (d.letrasUsadas.includes(letra) || d.vencedor === criador) palavraHtml += letra;
+                            else palavraHtml += "_";
+                        }
+
+                        // Teclado (só aparece pra quem adivinha e se não acabou)
+                        let tecladoHtml = "";
+                        if (!d.vencedor && !souEu) {
+                            tecladoHtml += `<div class="teclado-forca">`;
+                            const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+                            alfabeto.forEach(l => {
+                                let usada = d.letrasUsadas.includes(l) ? "usada" : "";
+                                tecladoHtml += `<button class="tecla ${usada}" onclick="jogarForca('${m.id}', '${l}')">${l}</button>`;
+                            });
+                            tecladoHtml += `</div>`;
+                        } else if (d.vencedor) {
+                            tecladoHtml = `<p style="font-size:12px; color:var(--main);">A palavra era: <b>${d.palavra}</b></p>`;
+                        }
+
+                        let desenhoForca = ["🤨", "😟", "😨", "😰", "😱", "💀"];
+                        let cara = d.erros > 0 ? desenhoForca[Math.min(d.erros - 1, 5)] : "🙂";
+
+                        conteudo = `<div style="text-align:center; padding-top:5px; width: 220px;">
+                            <b>Forca Secreta</b><br>
+                            <span style="font-size:24px;">${cara}</span><br>
+                            <small>${status}</small>
+                            <div class="forca-letras">${palavraHtml}</div>
+                            ${tecladoHtml}
+                        </div>`;
+
                     } else if (d.img) {
                         conteudo = `<img src="${d.img}" class="img-chat">`;
                     } else {
