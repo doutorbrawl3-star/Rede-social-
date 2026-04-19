@@ -70,7 +70,14 @@
         /* Jogos */
         .velha-board { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; background: #000; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
         .velha-cell { width: 50px; height: 50px; background: var(--card); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; color: white; }
-        .menu-jogos-box { position:absolute; bottom:70px; left:15px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; z-index:200; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .menu-jogos-box { position:absolute; bottom:70px; left:15px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; z-index:200; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 220px; }
+        
+        /* Novos Jogos */
+        .conecta-board { display: grid; grid-template-columns: repeat(7, 30px); gap: 3px; background: #0055ff; padding: 5px; border-radius: 8px; margin: 10px auto; width: fit-content; border: 1px solid var(--border); }
+        .conecta-cell { width: 30px; height: 30px; background: var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .conecta-cell.red { background: #ff4444; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .conecta-cell.yellow { background: #ffdd00; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .batata-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin: 5px auto; text-align: center; }
 
         /* Respostas (Reply) */
         .reply-box { background: rgba(0,0,0,0.15); border-left: 3px solid rgba(255,255,255,0.5); padding: 5px 8px; font-size: 12px; margin-bottom: 5px; border-radius: 4px; }
@@ -210,9 +217,12 @@
                 
                 <div id="menu-jogos" class="menu-jogos-box hidden">
                     <b style="font-size:12px; text-align:center; color:var(--text-gray);">Escolha um Jogo:</b>
-                    <button onclick="enviarJogoVelha()" style="background:#0084ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">❌ Jogo da Velha ⭕</button>
-                    <button onclick="enviarPPT()" style="background:#a333ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✊ Pedra, Papel, Tesoura</button>
-                    <button onclick="enviarDados()" style="background:#ff8800; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🎲 Batalha de Dados</button>
+                    <button onclick="enviarJogoVelha()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">❌ Jogo da Velha ⭕</button>
+                    <button onclick="enviarPPT()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✊ Pedra, Papel, Tesoura</button>
+                    <button onclick="enviarDados()" style="background:#30363d; color:white; border:1px solid var(--border); padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🎲 Batalha de Dados</button>
+                    <hr style="border: 0; border-top: 1px solid var(--border); width: 100%; margin: 2px 0;">
+                    <button onclick="enviarConecta4()" style="background:#0055ff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🔵 Conecta 4 🔴</button>
+                    <button onclick="enviarBatata()" style="background:#ff4444; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">💣 Batata Quente</button>
                 </div>
 
                 <div style="padding:15px; display:flex; gap:8px; background:var(--card); border-top:1px solid var(--border); align-items: center; position: relative;">
@@ -329,7 +339,6 @@
             await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
         };
 
-        // --- SISTEMA DE CHAMADAS OMITIDO PARA ECONOMIZAR ESPAÇO (PODE MANTER O SEU) ---
         const configuracaoRTC = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
         let pcChamada = null, streamLocal = null, streamRemoto = null, chamadaAtualId = null;
 
@@ -496,7 +505,6 @@
             await addDoc(collection(db, `chats/${chatId}/mensagens`), { de: meuNome, tag: minhaTag, audio: base64, data: Date.now(), dataStr: formataData(), lida: false, editado: false });
         }
 
-
         // ==========================================
         // ===== SISTEMA DE JOGOS E MENU AQUI =====
         // ==========================================
@@ -507,7 +515,7 @@
 
         // 1. Jogo da Velha
         window.enviarJogoVelha = async () => {
-            toggleMenuJogos(); // Fecha o menu
+            toggleMenuJogos();
             if(chatAtivoId) {
                 const chatId = [meuNome, chatAtivoId].sort().join("_");
                 await addDoc(collection(db, `chats/${chatId}/mensagens`), {
@@ -558,18 +566,16 @@
             if (!docSnap.exists()) return;
             const d = docSnap.data();
             
-            if (d.vencedor || d.jogadas[meuNome]) return; // Já jogou ou acabou
+            if (d.vencedor || d.jogadas[meuNome]) return; 
             
             let novasJogadas = { ...d.jogadas, [meuNome]: minhaJogada };
             let updates = { jogadas: novasJogadas };
             
-            // Se os dois jogaram, calcula o vencedor
             if (Object.keys(novasJogadas).length === 2) {
                 const j1 = novasJogadas[meuNome];
                 const j2 = novasJogadas[chatAtivoId];
                 let vencedor = null;
-                
-                if (j1 === j2) vencedor = 'Empate';
+                   if (j1 === j2) vencedor = 'Empate';
                 else if ((j1 === '✊' && j2 === '✌️') || (j1 === '✋' && j2 === '✊') || (j1 === '✌️' && j2 === '✋')) vencedor = meuNome;
                 else vencedor = chatAtivoId;
                 
@@ -593,7 +599,7 @@
         window.jogarDado = async (msgId) => {
             const chatId = [meuNome, chatAtivoId].sort().join("_");
             const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
-                      const docSnap = await getDoc(docRef);
+            const docSnap = await getDoc(docRef);
             if (!docSnap.exists()) return;
             const d = docSnap.data();
             
@@ -613,6 +619,81 @@
             await updateDoc(docRef, updates);
         };
 
+        // 4. Conecta 4
+        window.enviarConecta4 = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_conecta4', tabuleiro: Array(42).fill(''),
+                    turno: meuNome, vencedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
+
+        window.jogarConecta4 = async (msgId, col) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+
+            if (d.vencedor || d.turno !== meuNome) return;
+
+            let tab = [...d.tabuleiro];
+            let alvoIdx = -1;
+            for(let r = 5; r >= 0; r--) {
+                let idx = r * 7 + col;
+                if(tab[idx] === '') { alvoIdx = idx; break; }
+            }
+            if(alvoIdx === -1) return; 
+
+            tab[alvoIdx] = meuNome;
+
+            const chk = (c1, c2, c3, c4) => tab[c1]===meuNome && tab[c2]===meuNome && tab[c3]===meuNome && tab[c4]===meuNome;
+            let ganhou = false;
+            for(let r=0; r<6; r++) for(let c=0; c<4; c++) { let i=r*7+c; if(chk(i, i+1, i+2, i+3)) ganhou = true; }
+            for(let r=0; r<3; r++) for(let c=0; c<7; c++) { let i=r*7+c; if(chk(i, i+7, i+14, i+21)) ganhou = true; }
+            for(let r=0; r<3; r++) for(let c=0; c<4; c++) { let i=r*7+c; if(chk(i, i+8, i+16, i+24)) ganhou = true; }
+            for(let r=0; r<3; r++) for(let c=3; c<7; c++) { let i=r*7+c; if(chk(i, i+6, i+12, i+18)) ganhou = true; }
+
+            let novoVencedor = ganhou ? meuNome : null;
+            if(!novoVencedor && !tab.includes('')) novoVencedor = 'Empate';
+
+            await updateDoc(docRef, { tabuleiro: tab, turno: novoVencedor ? null : chatAtivoId, vencedor: novoVencedor });
+        };
+
+        // 5. Batata Quente
+        window.enviarBatata = async () => {
+            toggleMenuJogos();
+            if(chatAtivoId) {
+                const chatId = [meuNome, chatAtivoId].sort().join("_");
+                const explosao = Date.now() + Math.floor(Math.random() * 15000) + 10000; 
+                await addDoc(collection(db, `chats/${chatId}/mensagens`), {
+                    de: meuNome, tipo: 'jogo_batata', posse: meuNome, deadline: explosao,
+                    perdedor: null, data: Date.now(), dataStr: formataData(), lida: false
+                });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
+
+        window.passarBatata = async (msgId) => {
+            const chatId = [meuNome, chatAtivoId].sort().join("_");
+            const docRef = doc(db, `chats/${chatId}/mensagens`, msgId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) return;
+            const d = docSnap.data();
+
+            if (d.perdedor || d.posse !== meuNome) return; 
+
+            if (Date.now() >= d.deadline) {
+                await updateDoc(docRef, { perdedor: meuNome });
+            } else {
+                await updateDoc(docRef, { posse: chatAtivoId });
+                await addDoc(collection(db, "notificacoes_chat"), { para: chatAtivoId, de: meuNome, data: Date.now() });
+            }
+        };
 
         // --- PWA ---
         let instalador;
@@ -635,7 +716,7 @@
         window.mudarAba = (aba) => {
             abaAtiva = aba; if(aba === "users") document.getElementById('badge-privado').classList.add('hidden');
             document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden')); document.getElementById('aba-' + aba).classList.remove('hidden');
-            document.getElementById('menu-jogos').classList.add('hidden'); // Fecha menu ao mudar de aba
+            document.getElementById('menu-jogos').classList.add('hidden'); 
         };
         
         window.mudarFiltroContatos = (tipo) => { filtroContatoAtual = tipo; document.getElementById('btn-meus-contatos').classList.toggle('ativo', tipo === 'meus'); document.getElementById('btn-explorar-contatos').classList.toggle('ativo', tipo === 'todos'); ouvirUsuarios(); };
@@ -718,7 +799,7 @@
 
         window.abrirChat = (id, corOutro) => {
             chatAtivoId = id; document.getElementById('janela-chat').classList.remove('hidden'); document.getElementById('chat-com-nome').innerText = id;
-            document.getElementById('menu-jogos').classList.add('hidden'); // Sempre fecha ao abrir chat novo
+            document.getElementById('menu-jogos').classList.add('hidden'); 
             const chatId = [meuNome, id].sort().join("_");
             onSnapshot(doc(db, "digitando", chatId), (d) => document.getElementById('texto-digitando').innerText = d.exists() && d.data()[id] ? `${id} está digitando...` : "");
             if(window.unsubChat) window.unsubChat();
@@ -734,7 +815,6 @@
                     
                     let conteudo = "";
                     
-                    // RENDER DOS JOGOS
                     if (d.tipo === 'jogo_velha') {
                         let boardHtml = `<div class="velha-board">`;
                         d.tabuleiro.forEach((cel, idx) => { boardHtml += `<div class="velha-cell" onclick="jogarVelha('${m.id}', ${idx}, '${d.turno}', '${d.vencedor}', '${d.tabuleiro.join(',')}')">${cel}</div>`; });
@@ -743,7 +823,7 @@
                         conteudo = `<div style="text-align:center; padding-top:5px;"><b>Jogo da Velha</b><br><small>${status}</small>${boardHtml}</div>`;
                     
                     } else if (d.tipo === 'jogo_ppt') {
-                        let j1 = d.jogadas[meuNome];
+                        let j1 =d.jogadas[meuNome];
                         let status = "Escolha sua jogada!";
                         let botoesHTML = `<div style="display:flex; gap:10px; justify-content:center; margin-top:8px;">
                             <button onclick="jogarPPT('${m.id}', '✊')" style="font-size:24px; cursor:pointer; background:none; border:none;">✊</button>
@@ -773,6 +853,30 @@
                             botoesHTML = `<div style="text-align:center; margin-top:5px; font-size:18px;">Seu número: <b>${r1}</b> <br> Adv: ⏳</div>`;
                         }
                         conteudo = `<div style="text-align:center; padding-top:5px; width:150px;"><b>Batalha de Dados</b><br><small>${status}</small><br>${botoesHTML}</div>`;
+                    
+                    } else if (d.tipo === 'jogo_conecta4') {
+                        let boardHtml = `<div class="conecta-board">`;
+                        for(let r=0; r<6; r++) {
+                            for(let c=0; c<7; c++) {
+                                let idx = r * 7 + c;
+                                let val = d.tabuleiro[idx];
+                                let pColor = '';
+                                if(val === d.de) pColor = 'red';
+                                else if(val !== '') pColor = 'yellow';
+                                boardHtml += `<div class="conecta-cell ${pColor}" onclick="jogarConecta4('${m.id}', ${c})"></div>`;
+                            }
+                        }
+                        boardHtml += `</div>`;
+                        let status = d.vencedor ? (d.vencedor==='Empate'?'Deu Velha! 👵':`Vencedor: ${d.vencedor} 🏆`) : (d.turno === meuNome ? '🔥 Sua vez!' : '⏳ Vez do adversário');
+                        conteudo = `<div style="text-align:center; padding-top:5px;"><b>Conecta 4</b><br><small>${status}</small>${boardHtml}</div>`;
+                    
+                    } else if (d.tipo === 'jogo_batata') {
+                        let agora = Date.now();
+                        let explodiu = d.perdedor || agora >= d.deadline;
+                        let quemPerdeu = d.perdedor || (explodiu ? d.posse : null);
+                        let status = explodiu ? `💥 ${quemPerdeu} explodiu!` : (d.posse === meuNome ? "💣 Passa a bomba!!" : "⏳ Com o adversário...");
+                        let btn = (!explodiu && d.posse === meuNome) ? `<button onclick="passarBatata('${m.id}')" style="background:#ff4444; color:white; padding:8px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; width:100%; margin-top:8px;">PASSA PRA FRENTE!</button>` : "";
+                        conteudo = `<div class="batata-box"><b>Batata Quente</b><br><small>${status}</small><br><div style="font-size:45px; margin:5px 0; display:inline-block; ${explodiu?'':'animation: pulse 0.5s infinite'}">${explodiu?'💥':'💣'}</div>${btn}</div>`;
                     
                     } else if (d.img) {
                         conteudo = `<img src="${d.img}" class="img-chat">`;
@@ -814,5 +918,3 @@
 </script>
 </body>
 </html>
-
-            
